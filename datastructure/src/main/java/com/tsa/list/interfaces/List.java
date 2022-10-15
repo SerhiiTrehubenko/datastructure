@@ -1,4 +1,4 @@
-package interfaces;
+package com.tsa.list.interfaces;
 
 public interface List <T> {
     void add(T value);

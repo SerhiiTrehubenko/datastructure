@@ -1,12 +1,13 @@
-package implementations;
+package com.tsa.list.implementations;
 
-import interfaces.List;
+import com.tsa.list.interfaces.List;
+
+import java.util.StringJoiner;
 
 public class  MyArrayList <T> implements List {
 
     private final int INIT_SIZE = 5;
     private int population = 0;
-    private int countInflation = 0;
     private T[] body = (T[]) new Object[INIT_SIZE];
 
     public MyArrayList() {
@@ -22,32 +23,29 @@ public class  MyArrayList <T> implements List {
     @Override
     public void add(Object value) {
         if (this.population == this.body.length) {
-            inflateBody((T) value);
+            inflateBody();
         }
         this.body[population++] = (T) value;
     }
 
     @Override
     public void add(Object value, int index) {
-        if (index < 0 || index >= population)
+        if (index < 0 || index > population)
             throw new IndexOutOfBoundsException(index + " is out of the List boundary");
         if (population+1 >= this.body.length) {
-            inflateBody((T) value, index);
-            if(countInflation > 0) population--;
-            countInflation++;
-            return;
+            inflateBody();
         }
-        int mediator = population - (index + 1);
+        int mediator = population - index;
         if (mediator == 0) {
-            System.out.println("if mediator");
+            //System.out.println("if mediator");
             T oldValue = this.body[index];
             this.body[index] = (T)value;
             this.body[population] = oldValue;
             population++;
             return;
         }
-        System.out.println("mediator= " + mediator);
-        for (int i = population; i >= population - mediator; i--) {
+        //System.out.println("mediator= " + mediator);
+        for (int i = population; i > population - mediator; i--) {
             this.body[i] = this.body[i-1];
         }
         population++;
@@ -60,7 +58,7 @@ public class  MyArrayList <T> implements List {
         if (index < 0 || index >= population)
             throw new IndexOutOfBoundsException(index + " is out of the List boundary");
         T removedValue = body[index];
-        int mediator = population - index;
+
         for (int i = index; i < population-1; i++) {
             this.body[i] = this.body[i+1];
         }
@@ -86,9 +84,8 @@ public class  MyArrayList <T> implements List {
     @Override
     public void clear() {
         this.population = 0;
-        for (T t : body) {
-            t = null;
-        }
+        body = (T[]) new Object[body.length]; //I was almost blind by the flash of this thought
+
     }
 
     @Override
@@ -132,14 +129,10 @@ public class  MyArrayList <T> implements List {
 
     @Override
     public String toString() {
-        StringBuilder stringBuilder = new StringBuilder();
+        /*StringBuilder stringBuilder = new StringBuilder();
         stringBuilder.append("[");
 
         for (int i = 0; i <= population-1; i++) {
-            if(i == 0) {
-                stringBuilder.append(this.body[i] + ", ");
-                i++;
-            }
             if(i == this.population-1) {
                 stringBuilder.append(this.body[i]);
                 continue;
@@ -148,27 +141,18 @@ public class  MyArrayList <T> implements List {
 
         }
         stringBuilder.append("]");
-        return stringBuilder.toString();
+        return stringBuilder.toString();*/
+        StringJoiner stringJoiner = new StringJoiner(", ", "[", "]");
+        for (int i = 0; i <= population-1; i++) {
+                stringJoiner.add(String.valueOf(this.body[i]));
+        }
+        return stringJoiner.toString();
     }
 
-    private void inflateBody(T value) {
-        population = 0;
+    private void inflateBody() {
         T[] newBody = (T[]) new Object[(this.body.length*3)/2+1];
-        for (T t : body) {
-            newBody[population++] = t;
-        }
-        this.body = newBody;
-        this.body[population] = (T)value;
-    }
-    private void inflateBody(T value, int index) {
-        population = 0;
-        T[] newBody = (T[]) new Object[((this.body.length*3)/2)+1];
-        for (T t : this.body) {
-            if (population == index) {
-                newBody[index] = value;
-                population++;
-            }
-            newBody[population++] = t;
+        for (int i =0; i < population; i++) {
+            newBody[i] = body[i];
         }
         this.body = newBody;
     }

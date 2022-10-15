@@ -1,16 +1,16 @@
-package implementations;
+package com.tsa.list.implementations;
 
-import interfaces.List;
+import com.tsa.list.interfaces.List;
 
 public class MyLinkedList <T> implements List {
 
-    private final int INIT_SIZE = 12;
+    private static final int INIT_SIZE = 12;
 
     private int population = 0;
-    public Nodes<T>[] body;
+    private Nodes<T>[] body;
 
-    public int[] removedNumbers;
-    public int removedPopulation;
+    private int[] removedNumbers;
+    private int removedPopulation;
     private Nodes<T> theLastInBody;
     private Nodes<T> theFirstInBody;
 
@@ -55,7 +55,7 @@ public class MyLinkedList <T> implements List {
 
     @Override
     public void add(Object value, int index) {
-        if (index < 0 || index >= population)
+        if (index < 0 || index > population)
             throw new IndexOutOfBoundsException(index + " is out of the List boundary");
         if ((population+1) >= body.length) inflation();
         if (index == 0) {
@@ -81,6 +81,28 @@ public class MyLinkedList <T> implements List {
                 this.theFirstInBody = body[population];
                 body[population].setPosition(index);
                 body[population].increaseIndexNext();
+            }
+            population++;
+            return;
+        }
+        if ((population - index) == 0) {
+            Nodes nodeInBody = null;
+            for (int i=0; i < population; i++) {
+                if((body[i] != null) && (body[i].getPosition() == index-1)) nodeInBody = body[i];
+            }
+            if (removedPopulation > 0) {
+                body[removedNumbers[removedPopulation]] = new Nodes<>(nodeInBody, nodeInBody.next, (T) value);
+                nodeInBody.setNext(body[removedNumbers[removedPopulation]]);
+                theFirstInBody.setPrevious(body[removedNumbers[removedPopulation]]);
+                body[removedNumbers[removedPopulation]].setPosition(index);
+                removedPopulation--;
+                theLastInBody = body[removedNumbers[removedPopulation]];
+            } else {
+                body[population] = new Nodes<>(nodeInBody, nodeInBody.next, (T) value);
+                nodeInBody.setNext(body[population]);
+                theFirstInBody.setPrevious(body[population]);
+                body[population].setPosition(index);
+                theLastInBody = body[population];
             }
             population++;
             return;
@@ -141,6 +163,7 @@ public class MyLinkedList <T> implements List {
                 return body[i].getValue();
             }
         }
+        System.out.println("return null");
         return null;
     }
     private void inflation() {
@@ -152,6 +175,8 @@ public class MyLinkedList <T> implements List {
     }
     @Override
     public T set(Object value, int index) {
+        if (index < 0 || index >= population)
+            throw new IndexOutOfBoundsException(index + " is out of the List boundary");
         Nodes set = null;
         T returnedValue = null;
         for (int i=0; i < population; i++) {
@@ -173,6 +198,7 @@ public class MyLinkedList <T> implements List {
         theFirstInBody.setIndex(0);
         theFirstInBody = null;
         theLastInBody = null;
+        this.body = new Nodes[body.length];
     }
 
     @Override
@@ -211,7 +237,7 @@ public class MyLinkedList <T> implements List {
     @Override
     public String toString() {
         if (theFirstInBody == null) {
-            return "";
+            return "[]";
         } else return theFirstInBody.toString();
     }
 
