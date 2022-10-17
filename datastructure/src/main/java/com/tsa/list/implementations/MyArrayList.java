@@ -2,23 +2,36 @@ package com.tsa.list.implementations;
 
 import com.tsa.list.interfaces.List;
 
+import java.util.Iterator;
 import java.util.StringJoiner;
 
 public class  MyArrayList <T> implements List {
 
-    private final int INIT_SIZE = 5;
+    private final static int INIT_CAPACITY = 10;
+    private double INIT_CAPACITY_COEFFICIENT = 1.5;
     private int population = 0;
-    private T[] body = (T[]) new Object[INIT_SIZE];
+    private T[] body = (T[]) new Object[INIT_CAPACITY];
 
     public MyArrayList() {
+        this(null, null);
     }
 
-    public MyArrayList(T... arg) {
-        if (arg.length > INIT_SIZE) this.body = (T[]) new Object[arg.length];
-        for (T t : arg) {
-            body[this.population++] = t;
-        }
+    public MyArrayList(Double customCoefficientCapacity) {
+        this(customCoefficientCapacity, null);
     }
+
+    public MyArrayList(Double customCoefficientCapacity, T... arg)  {
+        if(arg != null) {
+            if (arg.length > INIT_CAPACITY) this.body = (T[]) new Object[arg.length];
+
+            for (T t : arg) {
+                body[this.population++] = t;
+            }
+        }
+        if (customCoefficientCapacity != null &&
+                customCoefficientCapacity > 1) INIT_CAPACITY_COEFFICIENT = customCoefficientCapacity;
+    }
+
 
     @Override
     public void add(Object value) {
@@ -38,9 +51,9 @@ public class  MyArrayList <T> implements List {
         int mediator = population - index;
         if (mediator == 0) {
             //System.out.println("if mediator");
-            T oldValue = this.body[index];
+            //T oldValue = this.body[index];
             this.body[index] = (T)value;
-            this.body[population] = oldValue;
+            //this.body[population] = oldValue;
             population++;
             return;
         }
@@ -69,6 +82,8 @@ public class  MyArrayList <T> implements List {
 
     @Override
     public Object get(int index) {
+        if (index < 0 || index >= population)
+            throw new IndexOutOfBoundsException(index + " is out of the List boundary");
         return body[index];
     }
 
@@ -80,6 +95,8 @@ public class  MyArrayList <T> implements List {
         this.body[index] = (T)value;
         return removed;
     }
+
+
 
     @Override
     public void clear() {
@@ -126,22 +143,34 @@ public class  MyArrayList <T> implements List {
         }
         return -1;
     }
+    @Override
+    public Iterator iterator() {
+        return new Iterator() {
+            int counter;
+            @Override
+            public boolean hasNext() {
+                return counter < population;
+            }
+            @Override
+            public Object next() {
+                T value = body[counter];
+                counter++;
+                return value;
 
+            }
+            @Override
+            public void remove() {
+                for (int i = counter-1; i < population-1; i++) {
+                    body[i] = body[i+1];
+                }
+                body[population-1] = null;
+                population--;
+            }
+        };
+    }
     @Override
     public String toString() {
-        /*StringBuilder stringBuilder = new StringBuilder();
-        stringBuilder.append("[");
 
-        for (int i = 0; i <= population-1; i++) {
-            if(i == this.population-1) {
-                stringBuilder.append(this.body[i]);
-                continue;
-            }
-            stringBuilder.append(this.body[i] + ", ");
-
-        }
-        stringBuilder.append("]");
-        return stringBuilder.toString();*/
         StringJoiner stringJoiner = new StringJoiner(", ", "[", "]");
         for (int i = 0; i <= population-1; i++) {
                 stringJoiner.add(String.valueOf(this.body[i]));
@@ -150,7 +179,7 @@ public class  MyArrayList <T> implements List {
     }
 
     private void inflateBody() {
-        T[] newBody = (T[]) new Object[(this.body.length*3)/2+1];
+        T[] newBody = (T[]) new Object[(int)((this.body.length*INIT_CAPACITY_COEFFICIENT)+1)];
         for (int i =0; i < population; i++) {
             newBody[i] = body[i];
         }

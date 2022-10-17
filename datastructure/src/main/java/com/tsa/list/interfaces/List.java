@@ -1,6 +1,6 @@
 package com.tsa.list.interfaces;
 
-public interface List <T> {
+public interface List <T> extends Iterable<T> {
     void add(T value);
     void add(T value, int index);
     T remove(int index);
