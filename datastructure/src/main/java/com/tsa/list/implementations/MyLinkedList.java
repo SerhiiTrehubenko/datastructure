@@ -4,7 +4,7 @@ import com.tsa.list.interfaces.List;
 
 import java.util.Iterator;
 import java.util.StringJoiner;
-
+@SuppressWarnings("unchecked")
 public class MyLinkedList <T> implements List<T> {
     private Nodes<T> theFirstElement;
     private MyLinkedList<T>.Nodes<T> theLastElement;
@@ -22,32 +22,32 @@ public class MyLinkedList <T> implements List<T> {
         }
     }
     @Override
-    public void add(Object value) {
+    public void add(T value) {
        if (theFirstElement == null) {
-           theFirstElement = new MyLinkedList<T>.Nodes<>((T) value);
+           theFirstElement = new MyLinkedList<T>.Nodes<>(value);
        } else {
            MyLinkedList<T>.Nodes<T> current = theFirstElement;
            while (current.getNext() != null) {
                current = current.getNext();
            }
-           current.setNext(new MyLinkedList<T>.Nodes<>(current, (T) value));
+           current.setNext(new MyLinkedList<T>.Nodes<>(current, value));
            this.theLastElement = current.getNext();
        }
         population++;
     }
 
     @Override
-    public void add(Object value, int index) {
+    public void add(T value, int index) {
         if (index < 0 || index > theFirstElement.getIndex())
             throw new IndexOutOfBoundsException(index + " is out of the List boundary");
         if(index == 0) {
-            MyLinkedList<T>.Nodes<T> newElement = new MyLinkedList<T>.Nodes<>(null, theFirstElement, (T) value);
+            MyLinkedList<T>.Nodes<T> newElement = new MyLinkedList<T>.Nodes<>(null, theFirstElement, value);
             theFirstElement.setPrevious(newElement);
             theFirstElement = newElement;
             theFirstElement.setPosition(index);
             theFirstElement.increaseIndexNext();
         } else if ((theFirstElement.getIndex()) - index == 0) {
-            MyLinkedList<T>.Nodes<T> newElement = new MyLinkedList<T>.Nodes<>(theLastElement, (T) value);
+            MyLinkedList<T>.Nodes<T> newElement = new MyLinkedList<T>.Nodes<>(theLastElement, value);
             theLastElement.setNext(newElement);
             theLastElement = newElement;
         } else if (index <= (theFirstElement.getIndex()/2)){
@@ -55,7 +55,7 @@ public class MyLinkedList <T> implements List<T> {
             while (current.getPosition() != index) {
                 current = current.getNext();
             }
-            MyLinkedList<T>.Nodes<T> newElement = new MyLinkedList<T>.Nodes<>(current.getPrevious(), current, (T) value);
+            MyLinkedList<T>.Nodes<T> newElement = new MyLinkedList<T>.Nodes<>(current.getPrevious(), current, value);
             current.getPrevious().setNext(newElement);
             current.setPrevious(newElement);
             newElement.setPosition(index);
@@ -65,7 +65,7 @@ public class MyLinkedList <T> implements List<T> {
             while (current.getPosition() != index) {
                 current = current.getPrevious();
             }
-            MyLinkedList<T>.Nodes<T> newElement = new MyLinkedList<T>.Nodes<>(current.getPrevious(), current, (T) value);
+            MyLinkedList<T>.Nodes<T> newElement = new MyLinkedList<T>.Nodes<>(current.getPrevious(), current, value);
             current.getPrevious().setNext(newElement);
             current.setPrevious(newElement);
             newElement.setPosition(index);
@@ -78,7 +78,7 @@ public class MyLinkedList <T> implements List<T> {
     public T remove(int index) {
         if (index < 0 || index >= theFirstElement.getIndex())
             throw new IndexOutOfBoundsException(index + " is out of the List boundary");
-        T removedValue = null;
+        T removedValue;
         if(index == 0) {
             theFirstElement.decreaseIndexNext();
             theFirstElement.setIndex(theFirstElement.getIndex()-1);
@@ -135,24 +135,24 @@ public class MyLinkedList <T> implements List<T> {
     }
 
     @Override
-    public T set(Object value, int index) {
+    public T set(T value, int index) {
         if (index < 0 || index >= theFirstElement.getIndex())
             throw new IndexOutOfBoundsException(index + " is out of the List boundary");
-        T replacedValue = null;
+        T replacedValue;
         if (index <= (theFirstElement.getIndex()/2)){
             Nodes<T> current = theFirstElement;
             while (current.getPosition() != index) {
                 current = current.getNext();
             }
             replacedValue = current.getValue();
-            current.setValue((T) value);
+            current.setValue(value);
         } else {
             Nodes<T> current = theLastElement;
             while (current.getPosition() != index) {
                 current = current.getPrevious();
             }
             replacedValue = current.getValue();
-            current.setValue((T) value);
+            current.setValue(value);
         }
         return replacedValue;
     }
@@ -176,20 +176,16 @@ public class MyLinkedList <T> implements List<T> {
     }
 
     @Override
-    public boolean contains(Object value) {
+    public boolean contains(T value) {
         Nodes<T> current = theFirstElement;
         while (!current.getValue().equals(value) && current.getNext() != null) {
             current = current.getNext();
         }
-        if (current.getValue().equals(value)) {
-            return true;
-        } else {
-            return false;
-        }
+        return current.getValue().equals(value);
     }
 
     @Override
-    public int indexOf(Object value) {
+    public int indexOf(T value) {
         int nonCoincidence = -1;
         Nodes<T> current = theFirstElement;
         while (!current.getValue().equals(value) && current.getNext() != null) {
@@ -203,7 +199,7 @@ public class MyLinkedList <T> implements List<T> {
     }
 
     @Override
-    public int lastIndexOf(Object value) {
+    public int lastIndexOf(T value) {
         int nonCoincidence = -1;
         Nodes<T> current = theLastElement;
         while (!current.getValue().equals(value) && current.getPrevious() != null) {
@@ -222,7 +218,7 @@ public class MyLinkedList <T> implements List<T> {
             return "[]";
         } else {
             StringJoiner stringJoiner = new StringJoiner(", ", "[", "]");
-            Nodes current = theFirstElement;
+            Nodes<T> current = theFirstElement;
             while (current.getNext() != null) {
                 stringJoiner.add(String.valueOf(current.getValue()));
                 current = current.getNext();
@@ -234,8 +230,8 @@ public class MyLinkedList <T> implements List<T> {
     }
 
     @Override
-    public Iterator iterator() {
-        return new Iterator() {
+    public Iterator<T> iterator() {
+        return new Iterator<>() {
 
             int counter;
             Nodes<T> current = theFirstElement;
@@ -246,7 +242,7 @@ public class MyLinkedList <T> implements List<T> {
             }
 
             @Override
-            public Object next() {
+            public T next() {
                 value = current.getValue();
                 current = current.getNext();
                 counter++;
@@ -279,17 +275,14 @@ public class MyLinkedList <T> implements List<T> {
         };
     }
 
-    public class Nodes<T> {
-        private Nodes previous = null;
-        private Nodes next= null;;
-        private T value = null;;
+    private class Nodes<T> {
+        private Nodes<T> previous;
+        private Nodes<T> next;
+        private T value;
         private static int index;
         private int position;
-        private static int circle = 0;
 
-        public static StringBuilder stringBuilder;
-
-        public Nodes(Nodes previous, Nodes next, T value) {
+        public Nodes(Nodes<T> previous, Nodes<T> next, T value) {
             this.previous = previous;
             this.next = next;
             this.value = value;
@@ -332,15 +325,11 @@ public class MyLinkedList <T> implements List<T> {
 
         }
 
-        public void refreshCircle() {
-            this.circle = 0;
-        }
-
-        public Nodes getNext() {
+        public Nodes<T> getNext() {
             return next;
         }
 
-        public Nodes getPrevious() {
+        public Nodes<T> getPrevious() {
             return previous;
         }
 
@@ -348,11 +337,11 @@ public class MyLinkedList <T> implements List<T> {
             return value;
         }
 
-        public void setPrevious(Nodes previous) {
+        public void setPrevious(Nodes<T> previous) {
             this.previous = previous;
         }
 
-        public void setNext(Nodes next) {
+        public void setNext(Nodes<T> next) {
             this.next = next;
         }
 
@@ -365,8 +354,8 @@ public class MyLinkedList <T> implements List<T> {
             return index;
         }
 
-        public void setIndex(int index) {
-            this.index = index;
+        public void setIndex(int newIndex) {
+            index = newIndex;
         }
 
         public int getPosition() {
@@ -377,24 +366,5 @@ public class MyLinkedList <T> implements List<T> {
             this.position = position;
         }
 
-
-        public int searchValueForward(T value) {
-
-            if (this.value.equals(value)) {
-                return position;
-            } else {
-                if (circle > 1) return -1;
-                else return next.searchValueForward(value);
-            }
-        }
-        public int searchValueBackward(T value) {
-
-            if (this.value.equals(value)) {
-                return position;
-            } else {
-                if (circle > 1) return -1;
-                else return previous.searchValueBackward(value);
-            }
-        }
     }
 }

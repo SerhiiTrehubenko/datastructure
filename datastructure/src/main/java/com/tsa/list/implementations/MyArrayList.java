@@ -4,25 +4,23 @@ import com.tsa.list.interfaces.List;
 
 import java.util.Iterator;
 import java.util.StringJoiner;
-
-public class  MyArrayList <T> implements List {
+@SuppressWarnings("unchecked")
+public class  MyArrayList <T> implements List<T> {
 
     private final static int INIT_CAPACITY = 10;
     private double INIT_CAPACITY_COEFFICIENT = 1.5;
     private int population = 0;
-    private T[] body = (T[]) new Object[INIT_CAPACITY];
-
+    private Object[] body = new Object[INIT_CAPACITY];
     public MyArrayList() {
-        this(null, null);
+        this(null, (T[])null);
     }
 
     public MyArrayList(Double customCoefficientCapacity) {
-        this(customCoefficientCapacity, null);
+        this(customCoefficientCapacity, (T) null);
     }
-
     public MyArrayList(Double customCoefficientCapacity, T... arg)  {
         if(arg != null) {
-            if (arg.length > INIT_CAPACITY) this.body = (T[]) new Object[arg.length];
+            if (arg.length > INIT_CAPACITY) this.body = new Object[arg.length];
 
             for (T t : arg) {
                 body[this.population++] = t;
@@ -32,17 +30,15 @@ public class  MyArrayList <T> implements List {
                 customCoefficientCapacity > 1) INIT_CAPACITY_COEFFICIENT = customCoefficientCapacity;
     }
 
-
     @Override
-    public void add(Object value) {
+    public void add(T value) {
         if (this.population == this.body.length) {
             inflateBody();
         }
-        this.body[population++] = (T) value;
+        this.body[population++] = value;
     }
-
     @Override
-    public void add(Object value, int index) {
+    public void add(T value, int index) {
         if (index < 0 || index > population)
             throw new IndexOutOfBoundsException(index + " is out of the List boundary");
         if (population+1 >= this.body.length) {
@@ -50,27 +46,23 @@ public class  MyArrayList <T> implements List {
         }
         int mediator = population - index;
         if (mediator == 0) {
-            //System.out.println("if mediator");
-            //T oldValue = this.body[index];
-            this.body[index] = (T)value;
-            //this.body[population] = oldValue;
+            this.body[index] = value;
             population++;
             return;
         }
-        //System.out.println("mediator= " + mediator);
         for (int i = population; i > population - mediator; i--) {
             this.body[i] = this.body[i-1];
         }
         population++;
-        this.body[index] = (T) value;
+        this.body[index] = value;
     }
 
 
     @Override
-    public Object remove(int index) {
+    public T remove(int index) {
         if (index < 0 || index >= population)
             throw new IndexOutOfBoundsException(index + " is out of the List boundary");
-        T removedValue = body[index];
+        T removedValue = (T) body[index];
 
         for (int i = index; i < population-1; i++) {
             this.body[i] = this.body[i+1];
@@ -81,18 +73,17 @@ public class  MyArrayList <T> implements List {
     }
 
     @Override
-    public Object get(int index) {
+    public T get(int index) {
         if (index < 0 || index >= population)
             throw new IndexOutOfBoundsException(index + " is out of the List boundary");
-        return body[index];
+        return (T)body[index];
     }
-
     @Override
-    public Object set(Object value, int index) {
+    public T set(T value, int index) {
         if (index < 0 || index >= population)
             throw new IndexOutOfBoundsException(index + " is out of the List boundary");
-        T removed = this.body[index];
-        this.body[index] = (T)value;
+        T removed = (T)body[index];
+        this.body[index] = value;
         return removed;
     }
 
@@ -101,7 +92,7 @@ public class  MyArrayList <T> implements List {
     @Override
     public void clear() {
         this.population = 0;
-        body = (T[]) new Object[body.length]; //I was almost blind by the flash of this thought
+        body = new Object[body.length]; //I was almost blind by the flash of this thought
 
     }
 
@@ -116,7 +107,7 @@ public class  MyArrayList <T> implements List {
     }
 
     @Override
-    public boolean contains(Object value) {
+    public boolean contains(T value) {
         for (int i = 0; i < population; i++) {
             if (this.body[i].equals(value)) return true;
         }
@@ -124,10 +115,10 @@ public class  MyArrayList <T> implements List {
     }
 
     @Override
-    public int indexOf(Object value) {
+    public int indexOf(T value) {
 
         for (int i = 0; i < population; i++) {
-            if(this.body[i].equals((T)value)) {
+            if(this.body[i].equals(value)) {
                 return i;
             }
         }
@@ -135,25 +126,25 @@ public class  MyArrayList <T> implements List {
     }
 
     @Override
-    public int lastIndexOf(Object value) {
+    public int lastIndexOf(T value) {
         for (int i = population-1; i > 0; i--) {
-            if(this.body[i].equals((T)value)) {
+            if(this.body[i].equals(value)) {
                 return i;
             }
         }
         return -1;
     }
     @Override
-    public Iterator iterator() {
-        return new Iterator() {
+    public Iterator<T> iterator() {
+        return new Iterator<>() {
             int counter;
             @Override
             public boolean hasNext() {
                 return counter < population;
             }
             @Override
-            public Object next() {
-                T value = body[counter];
+            public T next() {
+                T value = (T)body[counter];
                 counter++;
                 return value;
 
@@ -179,7 +170,7 @@ public class  MyArrayList <T> implements List {
     }
 
     private void inflateBody() {
-        T[] newBody = (T[]) new Object[(int)((this.body.length*INIT_CAPACITY_COEFFICIENT)+1)];
+        Object[] newBody = new Object[(int)((this.body.length*INIT_CAPACITY_COEFFICIENT)+1)];
         for (int i =0; i < population; i++) {
             newBody[i] = body[i];
         }

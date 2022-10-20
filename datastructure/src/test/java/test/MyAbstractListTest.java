@@ -117,25 +117,25 @@ public abstract class MyAbstractListTest {
         populateList();
         assertEquals(5, array.size());
         array.clear();
-        assertEquals(true, array.isEmpty());
+        assertTrue(array.isEmpty());
     }
     @Test
     public void testIsEmptyFalse() {
         populateList();
         assertEquals(5, array.size());
-        assertEquals(false, array.isEmpty());
+        assertFalse(array.isEmpty());
     }
     @Test
     public void testContainsTrue() {
         populateList();
         assertEquals(5, array.size());
-        assertEquals(true, array.contains(3));
+        assertTrue(array.contains(3));
     }
     @Test
     public void testContainsFalse() {
         populateList();
         assertEquals(5, array.size());
-        assertEquals(false, array.contains(20));
+        assertFalse(array.contains(20));
     }
     @Test
     public void testIndexOfPositive() {

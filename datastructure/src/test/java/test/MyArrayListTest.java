@@ -1,8 +1,6 @@
 package test;
 
 import com.tsa.list.implementations.MyArrayList;
-import com.tsa.list.implementations.MyLinkedList;
-import com.tsa.list.interfaces.List;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 
