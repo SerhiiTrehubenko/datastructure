@@ -4,6 +4,7 @@ import com.tsa.list.interfaces.List;
 import org.junit.jupiter.api.Test;
 
 import java.util.Iterator;
+import java.util.NoSuchElementException;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -14,9 +15,9 @@ public abstract class MyAbstractListTest {
     @Test
     public void addToTheTail() {
         assertEquals(0, array.size());
-        array.add(10);
-        array.add(11);
-        array.add(12);
+        array.add(10,0);
+        array.add(11,1);
+        array.add(12,2);
         assertEquals(3, array.size());
         System.out.println(array);
         assertEquals(10, array.get(0));
@@ -128,8 +129,10 @@ public abstract class MyAbstractListTest {
     @Test
     public void testContainsTrue() {
         populateList();
-        assertEquals(5, array.size());
+        array.add(null);
+        assertEquals(6, array.size());
         assertTrue(array.contains(3));
+        assertTrue(array.contains(null));
     }
     @Test
     public void testContainsFalse() {
@@ -140,9 +143,12 @@ public abstract class MyAbstractListTest {
     @Test
     public void testIndexOfPositive() {
         populateList();
-        assertEquals(5, array.size());
+        array.add(null);
+        assertEquals(6, array.size());
         array.add(1,3);
         assertEquals(1, array.indexOf(1));
+        assertEquals(6, array.indexOf(null));
+        System.out.println(array);
     }
     @Test
     public void testIndexOfNegative() {
@@ -155,13 +161,16 @@ public abstract class MyAbstractListTest {
         populateList();
         assertEquals(5, array.size());
         array.add(1,3);
-        System.out.println(array);
+        array.add(null);
         assertEquals(3, array.lastIndexOf(1));
+        System.out.println(array);
+        assertEquals(6, array.lastIndexOf(null));
     }
     @Test
     public void testLastIndexOfNegative() {
         populateList();
-        assertEquals(5, array.size());
+        array.add(null);
+        assertEquals(6, array.size());
         assertEquals(-1, array.lastIndexOf(20));
     }
     @Test
@@ -185,7 +194,6 @@ public abstract class MyAbstractListTest {
     @Test
     public void testRemoveUnderIterating() {
         populateList();
-        System.out.println(array.size());
         Iterator<Integer> iterator = array.iterator();
         while (iterator.hasNext()) {
             Integer value = iterator.next();
@@ -193,10 +201,29 @@ public abstract class MyAbstractListTest {
             if (value.equals(2)) iterator.remove();
             if (value.equals(4)) iterator.remove();
         }
-        System.out.println(array);
-        assertEquals(2, array.size());
+        assertTrue(array.size() == 2);
     }
-
+    @Test
+    public void testThrowExceptionIteratorRemoveBeforeNext() {
+        populateList();
+        Iterator<Integer> iterator = array.iterator();
+        assertThrows(IllegalStateException.class, iterator::remove);
+    }
+    @Test
+    public void testThrowExceptionIteratorRemoveAfterLastNext() {
+        populateList();
+        Iterator<Integer> iterator = array.iterator();
+        while (iterator.hasNext()) iterator.next();
+        iterator.remove();
+        assertThrows(IllegalStateException.class, iterator::remove);
+    }
+    @Test
+    public void testThrowExceptionIteratorNextAfterLastNext() {
+        populateList();
+        Iterator<Integer> iterator = array.iterator();
+        while (iterator.hasNext()) iterator.next();
+        assertThrows(NoSuchElementException.class, iterator::next);
+    }
     private void populateList() {
         for (int i = 0; i < 5; i++) {
             array.add(i);

@@ -3,6 +3,7 @@ package com.tsa.list.implementations;
 import com.tsa.list.interfaces.List;
 
 import java.util.Iterator;
+import java.util.NoSuchElementException;
 import java.util.StringJoiner;
 @SuppressWarnings("unchecked")
 public class  MyArrayList <T> implements List<T> {
@@ -108,18 +109,28 @@ public class  MyArrayList <T> implements List<T> {
 
     @Override
     public boolean contains(T value) {
-        for (int i = 0; i < population; i++) {
-            if (this.body[i].equals(value)) return true;
+        if (value == null) {
+            for (int i = 0; i < population; i++) {
+                if (this.body[i] == null) return true;
+            }
+        } else {
+            for (int i = 0; i < population; i++) {
+                if (this.body[i] != null && this.body[i].equals(value)) return true;
+            }
         }
+
         return false;
     }
 
     @Override
     public int indexOf(T value) {
-
-        for (int i = 0; i < population; i++) {
-            if(this.body[i].equals(value)) {
-                return i;
+        if (value == null) {
+            for (int i = 0; i < population; i++) {
+                if (this.body[i] == null) return i;
+            }
+        } else {
+            for (int i = 0; i < population; i++) {
+                if (this.body[i] != null && this.body[i].equals(value)) return i;
             }
         }
         return -1;
@@ -127,44 +138,51 @@ public class  MyArrayList <T> implements List<T> {
 
     @Override
     public int lastIndexOf(T value) {
-        for (int i = population-1; i > 0; i--) {
-            if(this.body[i].equals(value)) {
-                return i;
+        if (value == null) {
+            for (int i = population-1; i > 0; i--) {
+                if (this.body[i] == null) return i;
+            }
+        } else {
+            for (int i = population-1; i > 0; i--) {
+                if (this.body[i] != null && this.body[i].equals(value)) return i;
             }
         }
+
         return -1;
     }
     @Override
     public Iterator<T> iterator() {
         return new Iterator<>() {
             int counter;
+            int removedLast;
             @Override
             public boolean hasNext() {
                 return counter < population;
             }
             @Override
             public T next() {
+                if(counter >= population) throw new NoSuchElementException("There are no more elements in the List");
                 T value = (T)body[counter];
                 counter++;
+
                 return value;
 
             }
             @Override
             public void remove() {
-                for (int i = counter-1; i < population-1; i++) {
-                    body[i] = body[i+1];
-                }
-                body[population-1] = null;
-                population--;
+                if(counter == 0) throw new IllegalStateException("\"You have called remove() before next()\"");
+                if(removedLast > 0) throw new IllegalStateException("\"You have called remove() after \"the last\" next()\"");
+                MyArrayList.this.remove(counter-1);
+                counter--;
+                if(counter >= population) removedLast++;
             }
         };
     }
     @Override
     public String toString() {
-
         StringJoiner stringJoiner = new StringJoiner(", ", "[", "]");
-        for (int i = 0; i <= population-1; i++) {
-                stringJoiner.add(String.valueOf(this.body[i]));
+        for (T t : this) {
+            stringJoiner.add(String.valueOf(t));
         }
         return stringJoiner.toString();
     }

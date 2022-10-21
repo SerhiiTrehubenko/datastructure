@@ -3,6 +3,7 @@ package com.tsa.list.implementations;
 import com.tsa.list.interfaces.List;
 
 import java.util.Iterator;
+import java.util.NoSuchElementException;
 import java.util.StringJoiner;
 @SuppressWarnings("unchecked")
 public class MyLinkedList <T> implements List<T> {
@@ -23,34 +24,35 @@ public class MyLinkedList <T> implements List<T> {
     }
     @Override
     public void add(T value) {
-       if (theFirstElement == null) {
-           theFirstElement = new MyLinkedList<T>.Nodes<>(value);
-       } else {
-           MyLinkedList<T>.Nodes<T> current = theFirstElement;
-           while (current.getNext() != null) {
-               current = current.getNext();
-           }
-           current.setNext(new MyLinkedList<T>.Nodes<>(current, value));
-           this.theLastElement = current.getNext();
-       }
-        population++;
+        this.add(value, population);
     }
 
     @Override
     public void add(T value, int index) {
-        if (index < 0 || index > theFirstElement.getIndex())
+        if (index < 0 || index > population)
             throw new IndexOutOfBoundsException(index + " is out of the List boundary");
         if(index == 0) {
+            if (theFirstElement == null) {
+                theFirstElement = new MyLinkedList<T>.Nodes<>(value);
+                population++;
+                return;
+            }
             MyLinkedList<T>.Nodes<T> newElement = new MyLinkedList<T>.Nodes<>(null, theFirstElement, value);
             theFirstElement.setPrevious(newElement);
             theFirstElement = newElement;
             theFirstElement.setPosition(index);
             theFirstElement.increaseIndexNext();
-        } else if ((theFirstElement.getIndex()) - index == 0) {
+        } else if ((population) - index == 0) {
+            if (theLastElement ==null) {
+                theLastElement = new MyLinkedList<T>.Nodes<>(theFirstElement, value);
+                theFirstElement.setNext(theLastElement);
+                population++;
+                return;
+            }
             MyLinkedList<T>.Nodes<T> newElement = new MyLinkedList<T>.Nodes<>(theLastElement, value);
             theLastElement.setNext(newElement);
             theLastElement = newElement;
-        } else if (index <= (theFirstElement.getIndex()/2)){
+        } else if (index <= (population/2)){
             MyLinkedList<T>.Nodes<T> current = theFirstElement;
             while (current.getPosition() != index) {
                 current = current.getNext();
@@ -177,39 +179,59 @@ public class MyLinkedList <T> implements List<T> {
 
     @Override
     public boolean contains(T value) {
-        Nodes<T> current = theFirstElement;
-        while (!current.getValue().equals(value) && current.getNext() != null) {
-            current = current.getNext();
+        if (value == null) {
+            for (Nodes<T> nodes = theFirstElement; nodes != null; nodes = nodes.getNext()) {
+                if (nodes.getValue() == null) {
+                    return true;
+                }
+            }
+        } else {
+            for (Nodes<T> nodes = theFirstElement; nodes != null; nodes = nodes.getNext()) {
+                if (nodes.getValue() != null && nodes.getValue().equals(value)) {
+                    return true;
+                }
+            }
         }
-        return current.getValue().equals(value);
+        return false;
     }
 
     @Override
     public int indexOf(T value) {
         int nonCoincidence = -1;
-        Nodes<T> current = theFirstElement;
-        while (!current.getValue().equals(value) && current.getNext() != null) {
-            current = current.getNext();
-        }
-        if (current.getValue().equals(value)) {
-            return current.getPosition();
+        if (value == null) {
+            for (Nodes<T> nodes = theFirstElement; nodes != null; nodes = nodes.getNext()) {
+                if (nodes.getValue() == null) {
+                    return nodes.getPosition();
+                }
+            }
         } else {
-            return nonCoincidence;
+            for (Nodes<T> nodes = theFirstElement; nodes != null; nodes = nodes.getNext()) {
+                if (nodes.getValue() != null && nodes.getValue().equals(value)) {
+                    return nodes.getPosition();
+                }
+            }
         }
+        return nonCoincidence;
+
     }
 
     @Override
     public int lastIndexOf(T value) {
         int nonCoincidence = -1;
-        Nodes<T> current = theLastElement;
-        while (!current.getValue().equals(value) && current.getPrevious() != null) {
-            current = current.getPrevious();
-        }
-        if (current.getValue().equals(value)) {
-            return current.getPosition();
+        if (value == null) {
+            for (Nodes<T> nodes = theLastElement; nodes != null; nodes = nodes.getPrevious()) {
+                if (nodes.getValue() == null) {
+                    return nodes.getPosition();
+                }
+            }
         } else {
-            return nonCoincidence;
+            for (Nodes<T> nodes = theLastElement; nodes != null; nodes = nodes.getPrevious()) {
+                if (nodes.getValue() != null && nodes.getValue().equals(value)) {
+                    return nodes.getPosition();
+                }
+            }
         }
+        return nonCoincidence;
     }
 
     @Override
@@ -218,12 +240,15 @@ public class MyLinkedList <T> implements List<T> {
             return "[]";
         } else {
             StringJoiner stringJoiner = new StringJoiner(", ", "[", "]");
-            Nodes<T> current = theFirstElement;
+            /*Nodes<T> current = theFirstElement;
             while (current.getNext() != null) {
                 stringJoiner.add(String.valueOf(current.getValue()));
                 current = current.getNext();
             }
-            stringJoiner.add(String.valueOf(current.getValue()));
+            stringJoiner.add(String.valueOf(current.getValue()));*/
+            for (T t : this) {
+                stringJoiner.add(String.valueOf(t));
+            }
             return stringJoiner.toString();
         }
 
@@ -233,9 +258,10 @@ public class MyLinkedList <T> implements List<T> {
     public Iterator<T> iterator() {
         return new Iterator<>() {
 
-            int counter;
-            Nodes<T> current = theFirstElement;
-            T value;
+            private int counter;
+            private int removedLast;
+            private Nodes<T> current = theFirstElement;
+            private T value;
             @Override
             public boolean hasNext() {
                 return counter < theFirstElement.getIndex();
@@ -243,6 +269,7 @@ public class MyLinkedList <T> implements List<T> {
 
             @Override
             public T next() {
+                if(counter >= theFirstElement.getIndex()) throw new NoSuchElementException("There is no more elements in the List");
                 value = current.getValue();
                 current = current.getNext();
                 counter++;
@@ -252,7 +279,10 @@ public class MyLinkedList <T> implements List<T> {
 
             @Override
             public void remove() {
-                if ((counter-1) == 0) {
+                if (counter == 0) throw new IllegalStateException("\"You have called remove() before next()\"");
+                if(removedLast > 0) throw new IllegalStateException("\"You have called remove() after \"the last\" next()\"");
+                MyLinkedList.this.remove(counter-1);
+                /*if ((counter-1) == 0) {
                     Nodes<T> previous = current.getPrevious();
                     previous.decreaseIndexNext();
                     previous.setIndex(current.getIndex()-1);
@@ -269,8 +299,9 @@ public class MyLinkedList <T> implements List<T> {
                     previous.getPrevious().setNext(previous.getNext());
                     previous.getNext().setPrevious(current.getPrevious());
                 }
-                population--;
+                population--;*/
                 counter--;
+                if(counter >= population) removedLast++;
              }
         };
     }
