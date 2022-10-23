@@ -201,7 +201,7 @@ public abstract class MyAbstractListTest {
             if (value.equals(2)) iterator.remove();
             if (value.equals(4)) iterator.remove();
         }
-        assertTrue(array.size() == 2);
+        assertEquals(2, array.size());
     }
     @Test
     public void testThrowExceptionIteratorRemoveBeforeNext() {
