@@ -25,6 +25,12 @@ class HashMapTest {
         mapFiller();
         assertEquals(6, map.size());
     }
+    @Test
+    void putToExistKey() {
+        mapFiller();
+        assertEquals("world!", map.put("Hello", "world2"));
+        assertEquals("world2", map.get("Hello"));
+    }
 
     @Test
     void get() {
@@ -41,7 +47,7 @@ class HashMapTest {
     }
 
     @Test
-    void containsKey() {
+    void containsKeyPositive() {
         mapFiller();
         assertAll(
                 () -> assertTrue(map.containsKey("")),
@@ -51,6 +57,11 @@ class HashMapTest {
                 () -> assertTrue(map.containsKey(100)),
                 () -> assertTrue(map.containsKey("myClass"))
         );
+    }
+    @Test
+    void containsKeyNegative() {
+        mapFiller();
+        assertFalse(map.containsKey("dfsret"));
     }
 
     @Test

@@ -1,5 +1,6 @@
 package com.tsa.list.implementations;
 
+import com.tsa.list.interfaces.List;
 import com.tsa.list.interfaces.Map;
 
 import java.util.Iterator;
@@ -39,11 +40,10 @@ public class HashMap<K, V> implements Map<K, V> {
 //    stored in this map
     @Override
     public V put(K key, V value) {
-        int index = key != null ? key.hashCode() % buckets.length : "null".hashCode() % buckets.length;
-        //System.out.println("index: "+index);
+        int index = getIndex(key);
         boolean isAdd = false;
         V retrievedValue = null;
-        var foundBucked = ((MyArrayList<MyEntry<K, V>>) buckets[index]);
+        var foundBucked = getBucket(index);
         if (!foundBucked.isEmpty()) {
             for (MyEntry<K, V> myEntry : foundBucked) {
                 if(Objects.equals(myEntry.getKey(), key)) {
@@ -53,18 +53,17 @@ public class HashMap<K, V> implements Map<K, V> {
                 }
             }
         } else {
-            //System.out.println("empty bucket");
             foundBucked.add(new MyEntry<>(key, value));
             isAdd = true;
         }
         if (!isAdd){
-            //System.out.println("new Entry");
             foundBucked.add(new MyEntry<>(key, value));
         }
 
         return retrievedValue;
     }
-//    Returns the value to which the specified key is mapped, or null if this map contains no mapping for the key.
+
+    //    Returns the value to which the specified key is mapped, or null if this map contains no mapping for the key.
 //    More formally, if this map contains a mapping from a key k to a value v such that Objects.equals(key, k), then
 //    this method returns v; otherwise it returns null. (There can be at most one such mapping.)
 //    If this map permits null values, then a return value of null does not necessarily indicate that the map contains
@@ -82,9 +81,9 @@ public class HashMap<K, V> implements Map<K, V> {
 //    NullPointerException – if the specified key is null and this map does not permit null keys (optional)
     @Override
     public V get(K key) {
-        int index = key != null ? key.hashCode() % buckets.length : "null".hashCode() % buckets.length;
+        int index = getIndex(key);
         V retrievedValue = null;
-        var foundBucked = ((MyArrayList<MyEntry<K, V>>) buckets[index]);
+        var foundBucked = getBucket(index);
         if (!foundBucked.isEmpty()) {
             for (MyEntry<K, V> myEntry : foundBucked) {
                 if (Objects.equals(myEntry.getKey(), key)) {
@@ -108,13 +107,11 @@ public class HashMap<K, V> implements Map<K, V> {
 //    NullPointerException – if the specified key is null and this map does not permit null keys (optional)
     @Override
     public boolean containsKey(K key) {
-        int index = key != null ? key.hashCode() % buckets.length : "null".hashCode() % buckets.length;
-        var foundBucked = ((MyArrayList<MyEntry<K, V>>) buckets[index]);
+        int index = getIndex(key);
+        var foundBucked = getBucket(index);
         if (!foundBucked.isEmpty()) {
             for (MyEntry<K, V> myEntry : foundBucked) {
-                if (myEntry.getKey() == null && key == null) {
-                    return true;
-                } else if (Objects.equals(myEntry.getKey(), key)) {
+                if (Objects.equals(myEntry.getKey(), key)) {
                     return true;
                 }
             }
@@ -141,9 +138,9 @@ public class HashMap<K, V> implements Map<K, V> {
 //    NullPointerException – if the specified key is null and this map does not permit null keys (optional)
     @Override
     public V remove(K key) {
-        int index = key != null ? key.hashCode() % buckets.length : "null".hashCode() % buckets.length;
+        int index = getIndex(key);
         V retrievedValue = null;
-        var foundBucked = ((MyArrayList<MyEntry<K, V>>) buckets[index]);
+        var foundBucked = getBucket(index);
         if (!foundBucked.isEmpty()) {
             for (MyEntry<K, V> myEntry : foundBucked) {
                 if (Objects.equals(myEntry.getKey(), key)) {
@@ -168,7 +165,7 @@ public class HashMap<K, V> implements Map<K, V> {
     public MyLinkedList<K> getKeyArray() {
         MyLinkedList<K> arrayKey = new MyLinkedList<>();
         for (Object bucket : buckets) {
-            var retrievedBucket = (MyArrayList<MyEntry<K, V>>) bucket;
+            var retrievedBucket = (List<MyEntry<K, V>>) bucket;
             for (MyEntry<K, V> entry : retrievedBucket) {
                 arrayKey.add(entry.getKey());
             }
@@ -179,7 +176,7 @@ public class HashMap<K, V> implements Map<K, V> {
     @Override
     public Iterator<K> iterator() {
         return new Iterator<>() {
-            private final MyLinkedList<K> arrayKey = getKeyArray();
+            private final List<K> arrayKey = getKeyArray();
             private final Iterator<K> iterator = arrayKey.iterator();
             int counter;
 
@@ -210,6 +207,12 @@ public class HashMap<K, V> implements Map<K, V> {
             stringJoiner.add(value == null ? "null" : value.toString());
         }
         return stringJoiner.toString();
+    }
+    private int getIndex(K key) {
+        return key != null ? Math.abs(key.hashCode() % buckets.length) : Math.abs("null".hashCode() % buckets.length);
+    }
+    private List<MyEntry<K, V>> getBucket(int index) {
+        return (List<MyEntry<K, V>>) buckets[index];
     }
 
     @SuppressWarnings("unchecked")
