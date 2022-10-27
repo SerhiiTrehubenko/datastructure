@@ -7,3 +7,5 @@
 /dataSources/
 /dataSources.local.xml
 /target
+/out
+/src/main/java/META-INF

@@ -1,0 +1,51 @@
+This is true of both spoken/written languages and programming languages. It’s often
+subtle: A language gently guides you into certain modes of thought and away from
+others. Java is particularly opinionated.
+Java is a derived language. The original language designers didn’t want to use C++ for
+a project, so created a new language which unsurprisingly looked a lot like C++, but
+with improvements. The core changes were the incorporation of a virtual machine
+and garbage collection, both of which are described in detail in this book. Java is
+also responsible for pushing the industry forward in other ways; for example, most
+languages are now expected to include documentation markup syntax and a tool to
+produce HTML documentation.
+One of the most predominant Java concepts came from the SmallTalk language,
+which insists that the “object” (described in the next chapter) is the fundamental
+unit of programming, so everything must be an object. Time has tested this belief?
+and found it overenthusiastic. Some folks even declare that objects are a complete
+failure and should be discarded. Personally, I find that making everything an object.
+is not only an unnecessary burden but also pushes many designs in a poor direction.
+However, there are still situations where objects shine. Requiring that everything be
+an object (especially all the way down to the lowest level) is a design mistake, but
+banning objects altogether seems equally draconian.
+Other Java language decisions haven’t panned out as promised. Throughout this book
+I attempt to explain these so you not only understand those features, but also why
+they might not feel quite right to you. It’s not about declaring that Java is a good
+language or a bad one. If you understand the flaws and limitations of the language
+you will:
+1. Not get stymied when you encounter a feature that seems “off.”
+Introduction 12
+2. Design and code better by knowing where the boundaries are.
+Programming is about managing complexity: the complexity of the problem, laid
+upon the complexity of the machine. Because of this complexity, most of our
+programming projects fail.
+Many language design decisions are made with complexity in mind, but at some
+point other issues are considered essential. Inevitably, those other issues are what
+cause programmers to eventually “hit the wall” with a language. For example, C++
+had to be backward-compatible with C (to allow easy migration for C programmers),
+as well as efficient. Those are both useful goals and account for much of the success of
+C++, but they also expose extra complexity that prevent some projects from finishing.
+Certainly, you can blame programmers and management, but if a language can help
+by catching your mistakes, why shouldn’t it?
+Visual BASIC (VB) was tied to BASIC, which wasn’t really designed as an extensible
+language. All the extensions piled upon VB have produced some truly un-maintainable
+syntax. The Perl language is backward-compatible with awk, sed, grep,
+and other Unix tools it was meant to replace, and as a result it is often accused of
+producing “write-only code” (that is, you can’t read your own code). On the other
+hand, C++, VB, Perl, and other languages such as SmallTalk had some of their design
+efforts focused on the issue of complexity and as a result are remarkably successful
+in solving certain types of problems.
+The communication revolution enables all of us to communicate with each other
+more easily: one-on-one as well as in groups and as a planet. I’ve heard it suggested
+that the next revolution is the formation of a kind of global mind that results from
+enough people and enough interconnectedness. Java might or might not be one of
+the tools for that revolution.
