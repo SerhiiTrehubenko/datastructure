@@ -9,38 +9,35 @@ import java.util.StringJoiner;
 
 @SuppressWarnings("unchecked")
 public class HashMap<K, V> implements Map<K, V> {
-
+    private static final double INITIAL_LOAD_FACTOR = 0.75;
+    private static final int INITIAL_GROW_FACTOR = 2;
+    private final double loadFactor;
     private static final int INITIAL_CAPACITY = 5;
-    private final Object[] buckets;
+    private Object[] buckets;
 
     public HashMap() {
-        this.buckets = new Object[INITIAL_CAPACITY];
-        for (int i = 0; i < INITIAL_CAPACITY; i++) {
+        this(INITIAL_CAPACITY, INITIAL_LOAD_FACTOR);
+    }
+    public HashMap(int initialCapacity) {
+        this(initialCapacity, INITIAL_LOAD_FACTOR);
+    }
+    public HashMap(double loadFactor) {
+        this(INITIAL_CAPACITY, loadFactor);
+    }
+    public HashMap(int initialCapacity, double loadFactor) {
+        this.buckets = new Object[initialCapacity];
+        this.loadFactor = loadFactor;
+        for (int i = 0; i < initialCapacity; i++) {
             buckets[i] = new MyArrayList<MyEntry<K,V>>();
         }
     }
 
-    //    Associates the specified value with the specified key in this map (optional operation). If the map previously
-//    contained a mapping for the key, the old value is replaced by the specified value. (A map m is said to contain
-//    a mapping for a key k if and only if m.containsKey(k) would return true.)
-//
-//    Params:
-    //    key – key with which the specified value is to be associated value – value to be associated with the
-    //    specified key
-//
-//    Returns:
-    //    the previous value associated with key, or null if there was no mapping for key. (A null return can also
-    //    indicate that the map previously associated null with key, if the implementation supports null values.)
-//
-//    Throws:
-//    UnsupportedOperationException – if the put operation is not supported by this map
-//    ClassCastException – if the class of the specified key or value prevents it from being stored in this map
-//    NullPointerException – if the specified key or value is null and this map does not permit null keys or values
-//    IllegalArgumentException – if some property of the specified key or value prevents it from being
-//    stored in this map
     @Override
     public V put(K key, V value) {
-        int index = getIndex(key);
+        if (buckets.length * loadFactor <= size()) {
+            grow();
+        }
+        int index = getIndex(key, buckets.length);
         boolean isAdd = false;
         V retrievedValue = null;
         var foundBucked = getBucket(index);
@@ -63,25 +60,9 @@ public class HashMap<K, V> implements Map<K, V> {
         return retrievedValue;
     }
 
-    //    Returns the value to which the specified key is mapped, or null if this map contains no mapping for the key.
-//    More formally, if this map contains a mapping from a key k to a value v such that Objects.equals(key, k), then
-//    this method returns v; otherwise it returns null. (There can be at most one such mapping.)
-//    If this map permits null values, then a return value of null does not necessarily indicate that the map contains
-//    no mapping for the key; it's also possible that the map explicitly maps the key to null. The containsKey operation
-//    may be used to distinguish these two cases.
-//
-//    Params:
-//    key – the key whose associated value is to be returned
-//
-//    Returns:
-//    the value to which the specified key is mapped, or null if this map contains no mapping for the key
-//
-//    Throws:
-//    ClassCastException – if the key is of an inappropriate type for this map (optional)
-//    NullPointerException – if the specified key is null and this map does not permit null keys (optional)
     @Override
     public V get(K key) {
-        int index = getIndex(key);
+        int index = getIndex(key, buckets.length);
         V retrievedValue = null;
         var foundBucked = getBucket(index);
         if (!foundBucked.isEmpty()) {
@@ -93,21 +74,9 @@ public class HashMap<K, V> implements Map<K, V> {
         }
         return retrievedValue;
     }
-//    Returns true if this map contains a mapping for the specified key. More formally, returns true if and only if
-//    this map contains a mapping for a key k such that Objects.equals(key, k). (There can be at most one such mapping.)
-//
-//    Params:
-//    key – key whose presence in this map is to be tested
-//
-//    Returns:
-//            true if this map contains a mapping for the specified key
-//
-//    Throws:
-//    ClassCastException – if the key is of an inappropriate type for this map (optional)
-//    NullPointerException – if the specified key is null and this map does not permit null keys (optional)
     @Override
     public boolean containsKey(K key) {
-        int index = getIndex(key);
+        int index = getIndex(key , buckets.length);
         var foundBucked = getBucket(index);
         if (!foundBucked.isEmpty()) {
             for (MyEntry<K, V> myEntry : foundBucked) {
@@ -118,27 +87,10 @@ public class HashMap<K, V> implements Map<K, V> {
         }
         return false;
     }
-//    Removes the mapping for a key from this map if it is present (optional operation). More formally, if this map
-//    contains a mapping from key k to value v such that Objects.equals(key, k), that mapping is removed. (The map can
-//    contain at most one such mapping.)
-//    Returns the value to which this map previously associated the key, or null if the map contained no mapping for the key.
-//    If this map permits null values, then a return value of null does not necessarily indicate that the map contained
-//    no mapping for the key; it's also possible that the map explicitly mapped the key to null.
-//    The map will not contain a mapping for the specified key once the call returns.
-//
-//    Params:
-//    key – key whose mapping is to be removed from the map
-//
-//    Returns:
-//    the previous value associated with key, or null if there was no mapping for key.
-//
-//    Throws:
-//    UnsupportedOperationException – if the remove operation is not supported by this map
-//    ClassCastException – if the key is of an inappropriate type for this map (optional)
-//    NullPointerException – if the specified key is null and this map does not permit null keys (optional)
+
     @Override
     public V remove(K key) {
-        int index = getIndex(key);
+        int index = getIndex(key, buckets.length);
         V retrievedValue = null;
         var foundBucked = getBucket(index);
         if (!foundBucked.isEmpty()) {
@@ -156,7 +108,6 @@ public class HashMap<K, V> implements Map<K, V> {
     public int size() {
         int size = 0;
         for (Object bucket : buckets) {
-            //System.out.println(((MyArrayList<MyEntry<K, V>>)bucket).size());
             size = size + ((MyArrayList<MyEntry<K, V>>)bucket).size();
         }
         return size;
@@ -208,13 +159,28 @@ public class HashMap<K, V> implements Map<K, V> {
         }
         return stringJoiner.toString();
     }
-    private int getIndex(K key) {
-        return key != null ? Math.abs(key.hashCode() % buckets.length) : Math.abs("null".hashCode() % buckets.length);
+    private int getIndex(K key, int size) {
+        return key != null ? Math.abs(key.hashCode() % size) : Math.abs("null".hashCode() % size);
     }
     private List<MyEntry<K, V>> getBucket(int index) {
         return (List<MyEntry<K, V>>) buckets[index];
     }
 
+    private void grow() {
+        Object[] newBuckets = new Object[buckets.length * INITIAL_GROW_FACTOR];
+        //System.out.println(newBuckets.length);
+        for (int i = 0; i < newBuckets.length; i++) {
+            newBuckets[i] = new MyArrayList<MyEntry<K,V>>();
+        }
+        for (Object bucket : buckets) {
+            if (((List<MyEntry<K, V>>) bucket).size() > 0) {
+                for (MyEntry<K, V> entry : ((List<MyEntry<K, V>>) bucket)) {
+                    ((List<MyEntry<K, V>>) newBuckets[getIndex(entry.getKey(), newBuckets.length)]).add(entry);
+                }
+            }
+        }
+        buckets = newBuckets;
+    }
     @SuppressWarnings("unchecked")
     private static class MyEntry<K, V> {
         private final K key;
