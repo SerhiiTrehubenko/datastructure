@@ -95,7 +95,7 @@ class HashMapTest {
     @Test
     void iteratorThrowsExceptionWhenCallRemoveBeforeNext() {
         mapFiller();
-        Iterator<Object> iterator = map.iterator();
+        Iterator<?> iterator = map.iterator();
         assertThrows(IllegalStateException.class, iterator::remove, "\"You have called remove() before next()\"");
     }
 
@@ -103,7 +103,7 @@ class HashMapTest {
     @Test
     void iteratorThrowsExceptionWhenCallRemoveAfterRemoveOfLastNext() {
         mapFiller();
-        Iterator<Object> iterator = map.iterator();
+        Iterator<?> iterator = map.iterator();
         while (iterator.hasNext()) {
             iterator.next();
         }
@@ -115,7 +115,7 @@ class HashMapTest {
     @Test
     void iteratorThrowsExceptionWhenCallNextAfterLastNext() {
         mapFiller();
-        Iterator<Object> iterator = map.iterator();
+        Iterator<?> iterator = map.iterator();
         while (iterator.hasNext()) {
             iterator.next();
         }
@@ -124,8 +124,8 @@ class HashMapTest {
     @Test
     void toStr() {
         mapFiller();
-        assertEquals("[emptyKey, world!, double, integer, null, MyClass{ 1 }]", map.toString());
-
+        assertEquals("[=emptyKey, Hello=world!, 25.25=double, 100=integer, null=null, myClass=MyClass{ 1 }]",
+                map.toString());
     }
     private void mapFiller() {
         map.put("", "emptyKey");

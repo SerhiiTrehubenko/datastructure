@@ -7,3 +7,7 @@
 /dataSources/
 /dataSources.local.xml
 /target
+/.metadata
+/.settings
+.classpath
+.project
