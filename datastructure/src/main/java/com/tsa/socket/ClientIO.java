@@ -32,8 +32,8 @@ public class ClientIO implements Runnable {
                         throw new RuntimeException(e);
                     }
                 });
-                outClient.flush();
-                socket.shutdownOutput();
+                //outClient.flush();
+                //socket.shutdownOutput();
 
                 stringJoiner.add("Client send: ");
                 stringJoiner.add(request);

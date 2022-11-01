@@ -33,7 +33,7 @@ public class EchoServerIO implements Runnable {
                      var input = new DataInputStream(socket.getInputStream());
                      var out = new DataOutputStream(socket.getOutputStream())) {
                     out.write("Welcome to the Server, print \"STOP\" to exit\n\r".getBytes());
-                    out.flush();
+                    //out.flush();
                     while (count != -1) {
                         stringJoiner = new StringJoiner("");
                         stringJoiner.add(PREFIX);
@@ -61,7 +61,7 @@ public class EchoServerIO implements Runnable {
                             position++;
                         }
                         out.write(stringJoiner.toString().getBytes());
-                        out.flush();
+                        //out.flush();
                         position = 0;
                         if (flag || stop()) break;
                     }
