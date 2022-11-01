@@ -29,7 +29,7 @@ public class BuffInputStreamsTest {
             throw new RuntimeException(e);
         }
         assertEquals(resultMyBuffer.toString(), resultBuffer.toString());
-        assertEquals(214, resultMyBuffer.length());
+        assertEquals(3873, resultMyBuffer.length());
         assertTrue(resultMyBuffer.toString().contains("This is true of both spoken"));
     }
     @Test
@@ -52,7 +52,7 @@ public class BuffInputStreamsTest {
         }
 
         assertEquals(resultMyBuffer.toString(), resultBuffer.toString());
-        assertEquals(214, resultMyBuffer.length());
+        assertEquals(3873, resultMyBuffer.length());
         assertTrue(resultMyBuffer.toString().contains("This is true of both spoken"));
     }
 

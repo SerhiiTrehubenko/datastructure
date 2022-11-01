@@ -74,7 +74,6 @@ public class MyBufferedInputStream extends InputStream {
     public void close() throws IOException {
         inputStream.close();
         body = null;
-        System.out.println("\nFile closed");
     }
 
     @Override

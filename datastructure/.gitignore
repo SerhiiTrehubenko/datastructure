@@ -9,3 +9,7 @@
 /target
 /out
 /src/main/java/META-INF
+/.metadata
+/.settings
+.classpath
+.project
