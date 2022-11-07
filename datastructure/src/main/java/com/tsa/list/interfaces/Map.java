@@ -1,18 +1,23 @@
 package com.tsa.list.interfaces;
 
-import com.tsa.list.implementations.HashMap;
 import com.tsa.list.implementations.MyLinkedList;
 
 import java.util.Iterator;
 
-public interface Map <K, V> extends Iterable<HashMap.MyEntry<K, V>>  {
+public interface Map <K, V> extends Iterable<Map.MyEntry<K, V>>  {
     V put(K key, V value);
     V get(K key);
     boolean containsKey(K key);
     V remove(K key);
     int size();
-    public MyLinkedList<K> getKeyArray();
-    default Iterator<HashMap.MyEntry<K, V>> iterator() {
+    MyLinkedList<K> getKeyArray();
+
+    default Iterator<Map.MyEntry<K, V>> iterator() {
         return null;
+    }
+    interface MyEntry<K, V> {
+        K getKey();
+        void setValue(V value);
+        V getValue();
     }
 }
