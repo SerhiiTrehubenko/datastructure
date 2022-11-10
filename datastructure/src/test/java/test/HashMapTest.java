@@ -20,17 +20,53 @@ class HashMapTest {
         map = new HashMap<>();
     }
 
+    @DisplayName("test put(), returns NULL if there was no mapping for key.")
     @Test
-    void put() {
-        mapFiller();
-        assertEquals(6, map.size());
+    void testPutReturnsNullWhenThereWereNoPreviousMapping() {
+        assertNull(map.put("Hello", "world2"));
     }
+
+    @DisplayName("test put(), returns the previous value associated with key")
     @Test
-    void putToExistKey() {
-        mapFiller();
-        assertEquals("world!", map.put("Hello", "world2"));
-        assertEquals("world2", map.get("Hello"));
+    void testPutReturnsPreviousValueAssociatedWithKey() {
+        String key = "Hello";
+        assertNull(map.put(key, "world2"));
+        assertEquals("world2", map.put(key, "world100"));
+        assertEquals("world100", map.put(key, 20));
+        assertEquals(20, map.put(key, 25.25));
+        assertEquals(25.25, map.put(key, null));
+        assertNull(map.put(key, "MAp"));
     }
+    @DisplayName("test put(), NULL can be used as a key")
+    @Test
+    void testPutCanUseNullAsKey() {
+        map.put(null, "Hello");
+        assertEquals("Hello", map.get(null));
+    }
+
+    @Test
+    void testNativeLoadFactor() {
+        // capacity by default = 5;
+        assertEquals(5, ((HashMap<?, ?>)map).getBucketsLength());
+
+        //Puts in tha map "6" values
+        mapFiller();
+
+        // if reached loadFactor = 0.75 (5 * 0.75 ~ 4) -> capacity * 2 = 10;
+        assertEquals(10, ((HashMap<?, ?>)map).getBucketsLength());
+    }
+
+    @Test
+    void testCustomLoadFactor() {
+        Map<Object, Object> mapCustomLoadFactor = new HashMap<>(0.2);
+
+        mapCustomLoadFactor.put("hello", "world");
+        mapCustomLoadFactor.put("Java", "world");
+
+        // if reached loadFactor = 0.75 (5 * 0.2 ~ 1) -> initial_capacity(5) * 2 = 10;
+        assertEquals(10, ((HashMap<?, ?>)mapCustomLoadFactor).getBucketsLength());
+    }
+
 
     @Test
     void get() {
@@ -69,9 +105,9 @@ class HashMapTest {
         mapFiller();
         assertAll(
                 () -> assertEquals("world!", map.remove("Hello")),
-                () -> assertNull(map.remove("Hello")),
+                () -> assertNull(map.get("Hello")),
                 () -> assertEquals("double", map.remove(25.25)),
-                () -> assertNull(map.remove(25.25))
+                () -> assertNull(map.get(25.25))
         );
     }
 
@@ -86,6 +122,7 @@ class HashMapTest {
         mapFiller();
         int count = 0;
         for (Object o : map) {
+            System.out.println(o);
             count++;
         }
         assertEquals(count, map.size());
@@ -124,7 +161,7 @@ class HashMapTest {
     @Test
     void toStr() {
         mapFiller();
-        assertEquals("[=emptyKey, Hello=world!, 25.25=double, 100=integer, null=null, myClass=MyClass{ 1 }]",
+        assertEquals("[100=integer, =emptyKey, Hello=world!, null=null, 25.25=double, myClass=MyClass{ 1 }]",
                 map.toString());
     }
     private void mapFiller() {

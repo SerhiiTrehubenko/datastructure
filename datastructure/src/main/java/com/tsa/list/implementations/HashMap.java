@@ -1,6 +1,5 @@
 package com.tsa.list.implementations;
 
-import com.tsa.list.interfaces.List;
 import com.tsa.list.interfaces.Map;
 
 import java.util.Iterator;
@@ -41,53 +40,89 @@ public class HashMap<K, V> implements Map<K, V> {
         }
         boolean isAdd = false;
         V retrievedValue = null;
-        var foundBucked = getBucket(getIndex(key, buckets.length));
-        if (!foundBucked.isEmpty()) {
-            for (MyEntry<K, V> myEntry : foundBucked) {
-                if (Objects.equals(myEntry.getKey(), key)) {
-                    retrievedValue = myEntry.getValue();
-                    myEntry.setValue(value);
+        int index = getIndex(key, buckets.length);
+
+
+        if (buckets[index] != null) {
+            var currentMyEntity = (Map.MyEntry<K, V>) buckets[index];
+            if (currentMyEntity.getNext() != null) {
+                while (currentMyEntity.getNext() != null) {
+                    if (Objects.equals(currentMyEntity.hashCode(), Objects.hashCode(key)) &&
+                            Objects.equals(currentMyEntity.getKey(), key)) {
+                        retrievedValue = currentMyEntity.getValue();
+                        currentMyEntity.setValue(value);
+                        isAdd = true;
+                        break;
+                    }
+                    currentMyEntity = currentMyEntity.getNext();
+                }
+            } else {
+                if (Objects.equals(currentMyEntity.hashCode(), Objects.hashCode(key)) &&
+                        Objects.equals(currentMyEntity.getKey(), key)) {
+                    retrievedValue = currentMyEntity.getValue();
+                    currentMyEntity.setValue(value);
                     isAdd = true;
                 }
             }
-        } else {
-            foundBucked.add(new MyEntry<>(key, value));
-            isAdd = true;
+        }
+        if (!isAdd && buckets[index] != null) {
+            var currentMyEntity = (Map.MyEntry<K, V>) buckets[index];
+            buckets[index] = new MyEntry<>(key, value);
+            ((Map.MyEntry<K, V>) buckets[index]).setNext(currentMyEntity);
             sizeMap++;
+            isAdd = true;
         }
         if (!isAdd) {
-            foundBucked.add(new MyEntry<>(key, value));
+            buckets[index] = new MyEntry<>(key, value);
             sizeMap++;
         }
-
         return retrievedValue;
     }
 
     @Override
     public V get(K key) {
         V retrievedValue = null;
-        var foundBucked = getBucket(getIndex(key, buckets.length));
-        if (!foundBucked.isEmpty()) {
-            for (MyEntry<K, V> myEntry : foundBucked) {
-                if (Objects.equals(myEntry.getKey() == null ? "null".hashCode() : myEntry.getKey().hashCode(),
-                        key == null ? "null".hashCode() : key.hashCode()) &&
-                        Objects.equals(myEntry.getKey(), key)) {
-                    retrievedValue = myEntry.getValue();
+        int index = getIndex(key, buckets.length);
+
+        if (buckets[index] != null) {
+            var currentMyEntity = (Map.MyEntry<K, V>) buckets[index];
+            if (currentMyEntity.getNext() != null) {
+                while (currentMyEntity.getNext() != null) {
+                    if (Objects.equals(currentMyEntity.hashCode(), Objects.hashCode(key)) &&
+                            Objects.equals(currentMyEntity.getKey(), key)) {
+                        retrievedValue = currentMyEntity.getValue();
+                        break;
+                    }
+                    currentMyEntity = currentMyEntity.getNext();
                 }
             }
+            if (Objects.equals(currentMyEntity.hashCode(), Objects.hashCode(key)) &&
+                    Objects.equals(currentMyEntity.getKey(), key)) {
+                retrievedValue = currentMyEntity.getValue();
+            }
+
         }
         return retrievedValue;
     }
 
     @Override
     public boolean containsKey(K key) {
-        var foundBucked = getBucket(getIndex(key, buckets.length));
-        if (!foundBucked.isEmpty()) {
-            for (MyEntry<K, V> myEntry : foundBucked) {
-                if (Objects.equals(myEntry.getKey(), key)) {
-                    return true;
+
+        int index = getIndex(key, buckets.length);
+
+        if (buckets[index] != null) {
+            var currentMyEntity = (Map.MyEntry<K, V>) buckets[index];
+            if (currentMyEntity.getNext() != null) {
+                while (currentMyEntity.getNext() != null) {
+                    if (Objects.equals(currentMyEntity.hashCode(), Objects.hashCode(key)) &&
+                            Objects.equals(currentMyEntity.getKey(), key)) {
+                        return true;
+                    }
+                    currentMyEntity = currentMyEntity.getNext();
                 }
             }
+            return Objects.equals(currentMyEntity.hashCode(), Objects.hashCode(key)) &&
+                    Objects.equals(currentMyEntity.getKey(), key);
         }
         return false;
     }
@@ -95,14 +130,30 @@ public class HashMap<K, V> implements Map<K, V> {
     @Override
     public V remove(K key) {
         V retrievedValue = null;
-        var foundBucked = getBucket(getIndex(key, buckets.length));
-        if (!foundBucked.isEmpty()) {
-            for (MyEntry<K, V> myEntry : foundBucked) {
-                if (Objects.equals(myEntry.getKey(), key)) {
-                    retrievedValue = myEntry.getValue();
-                    myEntry.setValue(null);
+        int index = getIndex(key, buckets.length);
+        boolean isRemoved = false;
+        if (buckets[index] != null) {
+            var currentMyEntity = (Map.MyEntry<K, V>) buckets[index];
+            if (currentMyEntity.getNext() != null) {
+                while (currentMyEntity.getNext() != null) {
+                    if (Objects.equals(currentMyEntity.hashCode(), Objects.hashCode(key)) &&
+                            Objects.equals(currentMyEntity.getKey(), key)) {
+                        retrievedValue = currentMyEntity.getValue();
+                        currentMyEntity.setValue(null);
+                        isRemoved = true;
+                        break;
+                    }
+                    currentMyEntity = currentMyEntity.getNext();
                 }
             }
+            if (!isRemoved) {
+                if (Objects.equals(currentMyEntity.hashCode(), Objects.hashCode(key)) &&
+                        Objects.equals(currentMyEntity.getKey(), key)) {
+                    retrievedValue = currentMyEntity.getValue();
+                    currentMyEntity.setValue(null);
+                }
+            }
+
         }
         return retrievedValue;
     }
@@ -113,67 +164,77 @@ public class HashMap<K, V> implements Map<K, V> {
     }
 
     @Override
-    public MyLinkedList<K> getKeyArray() {
-        MyLinkedList<K> arrayKey = new MyLinkedList<>();
-        for (Object bucket : buckets) {
-            if (bucket != null) {
-                var retrievedBucket = (List<MyEntry<K, V>>) bucket;
-                for (MyEntry<K, V> entry : retrievedBucket) {
-                    arrayKey.add(entry.getKey());
-                }
-            }
-        }
-        return !arrayKey.isEmpty() ? arrayKey : null;
-    }
-
-    @Override
     public Iterator<Map.MyEntry<K, V>> iterator() {
         return new Iterator<>() {
             private int removedLast;
+            private int removedQuantity;
             private int counter;
-            private int bucketsLength = buckets.length;
             private int position;
-            private int totalSize = size();
-            private Object bucket;
-            private Iterator<Map.MyEntry<K, V>> iteratorList;
+            private Object returnedEntry;
+            private Object currentEntry;
 
             @Override
             public boolean hasNext() {
-                return counter < totalSize;
+                return counter < size();
             }
 
             @Override
             public Map.MyEntry<K, V> next() {
-                if (counter >= totalSize) throw new NoSuchElementException("There is no more elements in the List");
-                if (bucket == null || !iteratorList.hasNext()) {
-                    bucketsLength = buckets.length;
-                    findBucket();
+                if (counter >= size()) throw new NoSuchElementException("There is no more elements");
+
+                while (currentEntry == null && position < buckets.length/*|| buckets[position] == null*/) {
+                    currentEntry = buckets[position];
+                    position++;
+
                 }
+
+                returnedEntry = currentEntry;
+                currentEntry = ((Map.MyEntry<K, V>) currentEntry).getNext();
+
                 counter++;
-                return iteratorList.next();
+                if (counter == size()) sizeMap = sizeMap - removedQuantity;
+                return (Map.MyEntry<K, V>) returnedEntry;
             }
 
             @Override
             public void remove() {
+                int count = 0;
                 if (counter == 0) throw new IllegalStateException("\"You have called remove() before next()\"");
                 if (removedLast > 0)
                     throw new IllegalStateException("\"You have called remove() after \"the last\" next()\"");
-                iteratorList.remove();
-                sizeMap--;
-                totalSize = size();
-                if (counter >= totalSize) removedLast++;
-            }
-
-            private void findBucket() {
-                while (position < bucketsLength) {
-                    if (buckets[position] != null) {
-                        bucket = buckets[position];
-                        List<Map.MyEntry<K, V>> list = (List<Map.MyEntry<K, V>>) bucket;
-                        iteratorList = list.iterator();
-                        position++;
-                        break;
+                Map.MyEntry<K, V> inBuckets = null;
+                for (Object bucket : buckets) {
+                    Map.MyEntry<K, V> returned = (Map.MyEntry<K, V>) returnedEntry;
+                    Map.MyEntry<K, V> currentBucket = (Map.MyEntry<K, V>) bucket;
+                    if (currentBucket != null) {
+                        if (Objects.equals(returned.hashCode(), currentBucket.hashCode()) &&
+                                Objects.equals(returned.getKey(), currentBucket.getKey())) {
+                            inBuckets = currentBucket;
+                            break;
+                        }
                     }
-                    position++;
+                    count++;
+                }
+                if (inBuckets != null) {
+                    buckets[count] = ((Map.MyEntry<K, V>) returnedEntry).getNext();
+                } else {
+                    Map.MyEntry<K, V> returned = (Map.MyEntry<K, V>) returnedEntry;
+                    int index = getIndex(returned.getKey(), buckets.length);
+                    Map.MyEntry<K, V> currentMyEntity = (Map.MyEntry<K, V>) buckets[index];
+                    while (currentMyEntity.getNext() != null) {
+                        if (Objects.equals(currentMyEntity.getNext().hashCode(), Objects.hashCode(returned.hashCode())) &&
+                                Objects.equals(currentMyEntity.getNext().getKey(), returned.getKey())) {
+                            currentMyEntity.setNext(returned.getNext());
+                            break;
+                        }
+                        currentMyEntity = currentMyEntity.getNext();
+                    }
+                    //((Map.MyEntry<K, V>) returnedEntry).setNext(((Map.MyEntry<K, V>) currentEntry).getNext());
+                }
+                removedQuantity++;
+                if (counter >= size()) {
+                    removedLast++;
+                    sizeMap--;
                 }
             }
         };
@@ -182,48 +243,47 @@ public class HashMap<K, V> implements Map<K, V> {
     @Override
     public String toString() {
         StringJoiner stringJoiner = new StringJoiner(", ", "[", "]");
-        for (Object bucket : this.buckets) {
-            if (bucket != null) {
-                for (MyEntry<K, V> entry : (List<MyEntry<K, V>>) bucket) {
-                    stringJoiner.add(entry.toString());
-                }
-            }
+        for (Map.MyEntry<K, V> myEntry : this) {
+            stringJoiner.add(myEntry.toString());
         }
         return stringJoiner.toString();
     }
+    public int getBucketsLength() {
+        return buckets.length;
+    }
 
     private int getIndex(K key, int size) {
-        return key != null ? Math.abs(key.hashCode() <= Integer.MIN_VALUE ? Integer.MIN_VALUE : key.hashCode() % size) : Math.abs("null".hashCode() % size);
+        //return key != null ? Math.abs(key.hashCode() <= Integer.MIN_VALUE ? Integer.MIN_VALUE : key.hashCode() % size) : Math.abs("null".hashCode() % size);
+        return Math.abs(Objects.hashCode(key) <= Integer.MIN_VALUE ? Integer.MIN_VALUE : Objects.hashCode(key) % size);
     }
 
-    private List<MyEntry<K, V>> getBucket(int index) {
-        if (buckets[index] == null) buckets[index] = new MyArrayList<MyEntry<K, V>>();
-        return (List<MyEntry<K, V>>) buckets[index];
-    }
 
     private void grow() {
         Object[] newBuckets = new Object[buckets.length * INITIAL_GROW_FACTOR];
-        //System.out.println(newBuckets.length);
-        for (Object bucket : buckets) {
-            if (bucket != null) {
-                for (MyEntry<K, V> entry : ((List<MyEntry<K, V>>) bucket)) {
-                    int index = getIndex(entry.getKey(), newBuckets.length);
-                    if (newBuckets[index] == null) newBuckets[index] = new MyArrayList<MyEntry<K, V>>();
-                    List<MyEntry<K, V>> foundNewBucket = (List<MyEntry<K, V>>) newBuckets[index];
-                    foundNewBucket.add(entry);
-                }
+        for (Map.MyEntry<K, V> myEntry : this) {
+            int index = getIndex(myEntry.getKey(), newBuckets.length);
+            if (newBuckets[index] == null) {
+                myEntry.setNext(null);
+                newBuckets[index] = myEntry;
+            } else {
+                var retrievedMyEntry = newBuckets[index];
+                myEntry.setNext((Map.MyEntry<K, V>) retrievedMyEntry);
+                newBuckets[index] = myEntry;
             }
         }
         buckets = newBuckets;
     }
 
-    @SuppressWarnings("unchecked")
     public static class MyEntry<K, V> implements Map.MyEntry<K, V> {
+        private final int hash;
         private final K key;
         private V value;
 
+        private Map.MyEntry<K, V> next;
+
         public MyEntry(K key, V value) {
             this.key = key;
+            this.hash = Objects.hashCode(key);
             this.value = value;
         }
 
@@ -243,6 +303,16 @@ public class HashMap<K, V> implements Map<K, V> {
         }
 
         @Override
+        public Map.MyEntry<K, V> getNext() {
+            return next == null ? null : next;
+        }
+
+        @Override
+        public void setNext(Map.MyEntry<K, V> next) {
+            this.next = next;
+        }
+
+        @Override
         public boolean equals(Object o) {
             if (this == o) return true;
             if (o == null || getClass() != o.getClass()) {
@@ -257,10 +327,7 @@ public class HashMap<K, V> implements Map<K, V> {
 
         @Override
         public int hashCode() {
-            int result = 17;
-            result = (37 * result) + (key != null ? Objects.hashCode(key) : Objects.hashCode("null"));
-            result = (37 * result) + (value != null ? Objects.hashCode(value) : Objects.hashCode("null"));
-            return result;
+            return hash;
         }
 
         @Override

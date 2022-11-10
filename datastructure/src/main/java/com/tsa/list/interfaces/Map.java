@@ -10,7 +10,6 @@ public interface Map <K, V> extends Iterable<Map.MyEntry<K, V>>  {
     boolean containsKey(K key);
     V remove(K key);
     int size();
-    MyLinkedList<K> getKeyArray();
 
     default Iterator<Map.MyEntry<K, V>> iterator() {
         return null;
@@ -19,5 +18,7 @@ public interface Map <K, V> extends Iterable<Map.MyEntry<K, V>>  {
         K getKey();
         void setValue(V value);
         V getValue();
+        Map.MyEntry<K, V> getNext();
+        void setNext(Map.MyEntry<K, V> next);
     }
 }
