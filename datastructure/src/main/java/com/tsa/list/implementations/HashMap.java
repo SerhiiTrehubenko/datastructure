@@ -35,7 +35,7 @@ public class HashMap<K, V> implements Map<K, V> {
 
     @Override
     public V put(K key, V value) {
-        if (buckets.length * loadFactor <= size()) {
+        if (buckets.length * loadFactor <= sizeMap) {
             grow();
         }
         boolean isAdd = false;
@@ -129,6 +129,7 @@ public class HashMap<K, V> implements Map<K, V> {
 
     @Override
     public V remove(K key) {
+        int count = 0;
         V retrievedValue = null;
         int index = getIndex(key, buckets.length);
         boolean isRemoved = false;
@@ -136,28 +137,39 @@ public class HashMap<K, V> implements Map<K, V> {
             var currentMyEntity = (Map.MyEntry<K, V>) buckets[index];
             if (currentMyEntity.getNext() != null) {
                 while (currentMyEntity.getNext() != null) {
-                    if (Objects.equals(currentMyEntity.hashCode(), Objects.hashCode(key)) &&
-                            Objects.equals(currentMyEntity.getKey(), key)) {
-                        retrievedValue = currentMyEntity.getValue();
-                        currentMyEntity.setValue(null);
+                    if (Objects.equals(currentMyEntity.getNext().hashCode(), Objects.hashCode(key)) &&
+                            Objects.equals(currentMyEntity.getNext().getKey(), key)) {
+                        retrievedValue = currentMyEntity.getNext().getValue();
+                        currentMyEntity.setNext(currentMyEntity.getNext().getNext());
                         isRemoved = true;
+                        sizeMap--;
                         break;
                     }
                     currentMyEntity = currentMyEntity.getNext();
+                    count++;
                 }
             }
-            if (!isRemoved) {
+            if (!isRemoved && count > 0) {
+                currentMyEntity = (Map.MyEntry<K, V>) buckets[index];
                 if (Objects.equals(currentMyEntity.hashCode(), Objects.hashCode(key)) &&
                         Objects.equals(currentMyEntity.getKey(), key)) {
                     retrievedValue = currentMyEntity.getValue();
-                    currentMyEntity.setValue(null);
+                    sizeMap--;
+                    buckets[index] = ((Map.MyEntry<K, V>) buckets[index]).getNext();
+                }
+            } else if (!isRemoved){
+                if (Objects.equals(currentMyEntity.hashCode(), Objects.hashCode(key)) &&
+                        Objects.equals(currentMyEntity.getKey(), key)) {
+                    currentMyEntity = (Map.MyEntry<K, V>) buckets[index];
+                    retrievedValue = currentMyEntity.getValue();
+                    buckets[index] = null;
+                    sizeMap--;
                 }
             }
 
         }
         return retrievedValue;
     }
-
     @Override
     public int size() {
         return sizeMap;
@@ -175,12 +187,12 @@ public class HashMap<K, V> implements Map<K, V> {
 
             @Override
             public boolean hasNext() {
-                return counter < size();
+                return counter < sizeMap;
             }
 
             @Override
             public Map.MyEntry<K, V> next() {
-                if (counter >= size()) throw new NoSuchElementException("There is no more elements");
+                if (counter >= sizeMap) throw new NoSuchElementException("There is no more elements");
 
                 while (currentEntry == null && position < buckets.length/*|| buckets[position] == null*/) {
                     currentEntry = buckets[position];
@@ -189,10 +201,10 @@ public class HashMap<K, V> implements Map<K, V> {
                 }
 
                 returnedEntry = currentEntry;
-                currentEntry = ((Map.MyEntry<K, V>) currentEntry).getNext();
+                currentEntry = currentEntry == null ? null : ((Map.MyEntry<K, V>)currentEntry).getNext();
 
                 counter++;
-                if (counter == size()) sizeMap = sizeMap - removedQuantity;
+                if (counter == sizeMap) sizeMap = sizeMap - removedQuantity;
                 return (Map.MyEntry<K, V>) returnedEntry;
             }
 
@@ -229,10 +241,10 @@ public class HashMap<K, V> implements Map<K, V> {
                         }
                         currentMyEntity = currentMyEntity.getNext();
                     }
-                    //((Map.MyEntry<K, V>) returnedEntry).setNext(((Map.MyEntry<K, V>) currentEntry).getNext());
+
                 }
                 removedQuantity++;
-                if (counter >= size()) {
+                if (counter >= sizeMap) {
                     removedLast++;
                     sizeMap--;
                 }
@@ -253,7 +265,6 @@ public class HashMap<K, V> implements Map<K, V> {
     }
 
     private int getIndex(K key, int size) {
-        //return key != null ? Math.abs(key.hashCode() <= Integer.MIN_VALUE ? Integer.MIN_VALUE : key.hashCode() % size) : Math.abs("null".hashCode() % size);
         return Math.abs(Objects.hashCode(key) <= Integer.MIN_VALUE ? Integer.MIN_VALUE : Objects.hashCode(key) % size);
     }
 
