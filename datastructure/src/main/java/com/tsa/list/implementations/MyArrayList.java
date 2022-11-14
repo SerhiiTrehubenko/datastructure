@@ -4,194 +4,202 @@ import com.tsa.list.interfaces.List;
 
 import java.util.Iterator;
 import java.util.NoSuchElementException;
+import java.util.Objects;
 import java.util.StringJoiner;
-@SuppressWarnings("unchecked")
-public class  MyArrayList <T> implements List<T> {
+
+public class MyArrayList<T> implements List<T> {
 
     private final static int INIT_CAPACITY = 10;
-    private double INIT_CAPACITY_COEFFICIENT = 1.5;
-    private int population = 0;
-    private Object[] body = new Object[INIT_CAPACITY];
+    private double GROW_FACTOR = 1.5;
+    private int size = 0;
+    @SuppressWarnings("unchecked")
+    private T[] array = (T[]) new Object[INIT_CAPACITY];
+
     public MyArrayList() {
-        this(null, (T[])null);
+        this(null, (T[]) null);
     }
 
+    @SuppressWarnings("unchecked")
     public MyArrayList(Double customCoefficientCapacity) {
         this(customCoefficientCapacity, (T) null);
     }
-    public MyArrayList(Double customCoefficientCapacity, T... arg)  {
-        if(arg != null) {
-            if (arg.length > INIT_CAPACITY) this.body = new Object[arg.length];
+
+    @SuppressWarnings("unchecked")
+    public MyArrayList(Double customCoefficientCapacity, T... arg) {
+        if (arg != null) {
+            if (arg.length > INIT_CAPACITY) this.array = (T[]) new Object[arg.length];
 
             for (T t : arg) {
-                body[this.population++] = t;
+                array[this.size++] = t;
             }
         }
         if (customCoefficientCapacity != null &&
-                customCoefficientCapacity > 1) INIT_CAPACITY_COEFFICIENT = customCoefficientCapacity;
+                customCoefficientCapacity > 1) GROW_FACTOR = customCoefficientCapacity;
     }
 
     @Override
     public void add(T value) {
-        if (this.population == this.body.length) {
-            inflateBody();
-        }
-        this.body[population++] = value;
+        add(value, size);
     }
+
     @Override
     public void add(T value, int index) {
-        if (index < 0 || index > population)
-            throw new IndexOutOfBoundsException(index + " is out of the List boundary");
-        if (population+1 >= this.body.length) {
-            inflateBody();
+        checkBoundaryIncludeIndex(index);
+        if (size + 1 >= array.length) {
+            grow();
         }
-        int mediator = population - index;
-        if (mediator == 0) {
-            this.body[index] = value;
-            population++;
+
+        if ((size - index) == 0) { // add to the tail
+            array[index] = value;
+            size++;
             return;
         }
-        for (int i = population; i > population - mediator; i--) {
-            this.body[i] = this.body[i-1];
-        }
-        population++;
-        this.body[index] = value;
+        System.arraycopy(array, index, array, index + 1, size - index);
+
+        size++;
+
+        this.array[index] = value;
     }
 
 
     @Override
     public T remove(int index) {
-        if (index < 0 || index >= population)
-            throw new IndexOutOfBoundsException(index + " is out of the List boundary");
-        T removedValue = (T) body[index];
+        checkBoundaryExcludeIndex(index);
+        T removedValue = array[index];
 
-        for (int i = index; i < population-1; i++) {
-            this.body[i] = this.body[i+1];
+        if ((size - 1) == index) {
+            array[index] = null;
+            size--;
+            return removedValue;
         }
-        this.body[population-1] = null;
-        population--;
+
+        System.arraycopy(array, index + 1, array, index, size - index);
+
+        size--;
+
         return removedValue;
     }
 
     @Override
     public T get(int index) {
-        if (index < 0 || index >= population)
-            throw new IndexOutOfBoundsException(index + " is out of the List boundary");
-        return (T)body[index];
+        checkBoundaryExcludeIndex(index);
+        return array[index];
     }
+
     @Override
     public T set(T value, int index) {
-        if (index < 0 || index >= population)
-            throw new IndexOutOfBoundsException(index + " is out of the List boundary");
-        T removed = (T)body[index];
-        this.body[index] = value;
+        checkBoundaryExcludeIndex(index);
+        T removed = array[index];
+        array[index] = value;
         return removed;
     }
 
-
-
+    @SuppressWarnings("unchecked")
     @Override
     public void clear() {
-        this.population = 0;
-        body = new Object[body.length]; //I was almost blind by the flash of this thought
+        this.size = 0;
+        array = (T[]) new Object[array.length];
 
     }
 
     @Override
     public int size() {
-        return this.population;
+        return size;
     }
 
     @Override
     public boolean isEmpty() {
-        return population == 0;
+        return size == 0;
     }
 
     @Override
     public boolean contains(T value) {
-        if (value == null) {
-            for (int i = 0; i < population; i++) {
-                if (this.body[i] == null) return true;
-            }
-        } else {
-            for (int i = 0; i < population; i++) {
-                if (this.body[i] != null && this.body[i].equals(value)) return true;
-            }
-        }
-
-        return false;
+        return indexOf(value) != -1;
     }
 
     @Override
     public int indexOf(T value) {
-        if (value == null) {
-            for (int i = 0; i < population; i++) {
-                if (this.body[i] == null) return i;
-            }
-        } else {
-            for (int i = 0; i < population; i++) {
-                if (this.body[i] != null && this.body[i].equals(value)) return i;
-            }
+        int count = 0;
+        for (T valuesInArray : array) {
+            if (Objects.equals(valuesInArray, value)) return count;
+            count++;
         }
         return -1;
     }
 
     @Override
     public int lastIndexOf(T value) {
-        if (value == null) {
-            for (int i = population-1; i > 0; i--) {
-                if (this.body[i] == null) return i;
-            }
-        } else {
-            for (int i = population-1; i > 0; i--) {
-                if (this.body[i] != null && this.body[i].equals(value)) return i;
-            }
+        for (int i = size - 1; i > 0; i--) {
+            if (Objects.equals(array[i], value)) return i;
         }
-
         return -1;
     }
+
     @Override
     public Iterator<T> iterator() {
         return new Iterator<>() {
-            int counter;
-            int removedLast;
+            private int counter;
+            private boolean removedLast;
+
             @Override
             public boolean hasNext() {
-                return counter < population;
+                return counter < size;
             }
+
             @Override
             public T next() {
-                if(counter >= population) throw new NoSuchElementException("There are no more elements in the List");
-                T value = (T)body[counter];
+                if (counter >= size) {
+                    throw new NoSuchElementException("There are no more elements in the List");
+                }
+                T value = array[counter];
                 counter++;
 
                 return value;
 
             }
+
             @Override
             public void remove() {
-                if(counter == 0) throw new IllegalStateException("\"You have called remove() before next()\"");
-                if(removedLast > 0) throw new IllegalStateException("\"You have called remove() after \"the last\" next()\"");
-                MyArrayList.this.remove(counter-1);
+                if (counter == 0) {
+                    throw new IllegalStateException("\"You have called remove() before next()\"");
+                }
+                if (removedLast) {
+                    throw new IllegalStateException("\"You have called remove() after \"the last\" next()\"");
+                }
+                MyArrayList.this.remove(counter - 1);
                 counter--;
-                if(counter >= population) removedLast++;
+                if (counter >= size) removedLast = true;
             }
         };
     }
+
     @Override
     public String toString() {
         StringJoiner stringJoiner = new StringJoiner(", ", "[", "]");
-        for (T t : this) {
-            stringJoiner.add(String.valueOf(t));
+        for (T values : this) {
+            stringJoiner.add(String.valueOf(values));
         }
         return stringJoiner.toString();
     }
 
-    private void inflateBody() {
-        Object[] newBody = new Object[(int)((this.body.length*INIT_CAPACITY_COEFFICIENT)+1)];
-        for (int i =0; i < population; i++) {
-            newBody[i] = body[i];
+    @SuppressWarnings("unchecked")
+    private void grow() {
+        T[] newBody = (T[]) new Object[(int) ((this.array.length * GROW_FACTOR) + 1)];
+        System.arraycopy(array, 0, newBody, 0, size);
+        this.array = newBody;
+    }
+
+    private void checkBoundaryIncludeIndex(int index) {
+        if (index < 0 || index > size) {
+            throw new IndexOutOfBoundsException("Current size is: " + size +
+                    "you have provided: " + index + " is out of the List boundary");
         }
-        this.body = newBody;
+    }
+
+    private void checkBoundaryExcludeIndex(int index) {
+        if (index < 0 || index >= size) {
+            throw new IndexOutOfBoundsException("Current size is: " + size +
+                    "you have provided: " + index + " is out of the List size boundary -1");
+        }
     }
 }

@@ -145,7 +145,7 @@ public abstract class MyAbstractListTest {
         populateList();
         array.add(null);
         assertEquals(6, array.size());
-        array.add(1,3);
+        array.add(99,3);
         assertEquals(1, array.indexOf(1));
         assertEquals(6, array.indexOf(null));
         System.out.println(array);
