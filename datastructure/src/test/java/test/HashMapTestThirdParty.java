@@ -400,9 +400,9 @@ class HashMapTestThirdParty {
         String value = "value";
         map.put(key, value);
 
-        Iterator<Map.MyEntry<String, String>> iterator = map.iterator();
+        Iterator<Map.Entry<String, String>> iterator = map.iterator();
 
-        Map.MyEntry<String, String> entry = iterator.next();
+        Map.Entry<String, String> entry = iterator.next();
         assertEquals(key, entry.getKey());
         assertEquals(value ,entry.getValue());
 
@@ -436,15 +436,15 @@ class HashMapTestThirdParty {
         map.put(keyY, keyYValue);
         map.put(keyZ, keyZValue);
 
-        Iterator<Map.MyEntry<String, String>> iterator = map.iterator();
+        Iterator<Map.Entry<String, String>> iterator = map.iterator();
 
-        Map.MyEntry<String, String> resultZ = iterator.next();
-        Map.MyEntry<String, String> resultR = iterator.next();
-        Map.MyEntry<String, String> resultT = iterator.next();
-        Map.MyEntry<String, String> resultQ = iterator.next();
-        Map.MyEntry<String, String> resultW = iterator.next();
-        Map.MyEntry<String, String> resultY = iterator.next();
-        Map.MyEntry<String, String> resultE = iterator.next();
+        Map.Entry<String, String> resultZ = iterator.next();
+        Map.Entry<String, String> resultR = iterator.next();
+        Map.Entry<String, String> resultT = iterator.next();
+        Map.Entry<String, String> resultQ = iterator.next();
+        Map.Entry<String, String> resultW = iterator.next();
+        Map.Entry<String, String> resultY = iterator.next();
+        Map.Entry<String, String> resultE = iterator.next();
 
         assertEquals(keyZ, resultZ.getKey());
         assertEquals(keyZValue, resultZ.getValue());
@@ -477,7 +477,7 @@ class HashMapTestThirdParty {
         HashMap<String, String> map = new HashMap<>();
         map.put("key", "value");
 
-        Iterator<Map.MyEntry<String, String>> iterator = map.iterator();
+        Iterator<Map.Entry<String, String>> iterator = map.iterator();
         assertTrue(iterator.hasNext());
 
 
@@ -493,7 +493,7 @@ class HashMapTestThirdParty {
         map.put("key", "value");
         map.put("key2", "value");
 
-        Iterator<Map.MyEntry<String, String>> iterator = map.iterator();
+        Iterator<Map.Entry<String, String>> iterator = map.iterator();
 
         assertTrue(iterator.hasNext());
         iterator.next();
@@ -504,7 +504,7 @@ class HashMapTestThirdParty {
         HashMap<String, String> map = new HashMap<>();
         map.put("key", "value");
 
-        Iterator<Map.MyEntry<String, String>> iterator = map.iterator();
+        Iterator<Map.Entry<String, String>> iterator = map.iterator();
 
         assertTrue(iterator.hasNext());
         iterator.next();
@@ -530,7 +530,7 @@ class HashMapTestThirdParty {
         map.put(key, "value");
         assertEquals(1, map.size());
 
-        Iterator<Map.MyEntry<String, String>> iterator = map.iterator();
+        Iterator<Map.Entry<String, String>> iterator = map.iterator();
         iterator.next();
         iterator.remove();
 

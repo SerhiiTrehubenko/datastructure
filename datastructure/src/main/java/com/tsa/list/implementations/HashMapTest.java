@@ -1,6 +1,5 @@
-package test;
+package com.tsa.list.implementations;
 
-import com.tsa.list.implementations.HashMap;
 import com.tsa.list.interfaces.Map;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
