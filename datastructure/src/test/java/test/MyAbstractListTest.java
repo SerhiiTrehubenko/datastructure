@@ -29,6 +29,7 @@ public abstract class MyAbstractListTest {
         assertEquals(5, array.size());
         array.add(10,0);
         array.add(11,2);
+//        System.out.println(array);
         array.add(12, 7);
         assertEquals(8, array.size());
         assertEquals(12, array.get(7));
@@ -45,6 +46,30 @@ public abstract class MyAbstractListTest {
         populateList();
         assertThrows(IndexOutOfBoundsException.class, ()->array.add(10, -1));
     }
+
+    @Test
+    public void removeWhenListEmpty() {
+        assertThrows(RuntimeException.class,
+                () -> array.remove(0),
+                "There is nothing to do, Current size is: 0");
+    }
+
+    @Test
+    public void removeWhenListContainOneElement() {
+        array.add(20);
+        assertEquals(1, array.size());
+        assertEquals(20, array.remove(0));
+        assertEquals(0, array.size());
+    }
+
+    @Test
+    public void removeFromTailWhenListContainsTwoElements() {
+        array.add(20);
+        array.add(21);
+        assertEquals(21,array.remove(1));
+        assertEquals(1, array.size());
+    }
+
     @Test
     public void removeByTheIndexTheIndexInsideTheRange() {
         populateList();
@@ -55,7 +80,6 @@ public abstract class MyAbstractListTest {
         assertEquals(4, array.remove(3));
         System.out.println(array);
         assertEquals(3, array.size());
-
     }
     @Test
     public void removeByTheIndexIsBiggerThanMaximumRange() {
@@ -162,8 +186,9 @@ public abstract class MyAbstractListTest {
         assertEquals(5, array.size());
         array.add(1,3);
         array.add(null);
-        assertEquals(3, array.lastIndexOf(1));
         System.out.println(array);
+        assertEquals(3, array.lastIndexOf(1));
+
         assertEquals(6, array.lastIndexOf(null));
     }
     @Test

@@ -6,168 +6,117 @@ import java.util.Iterator;
 import java.util.NoSuchElementException;
 import java.util.Objects;
 import java.util.StringJoiner;
-@SuppressWarnings("unchecked")
-public class MyLinkedList <T> implements List<T> {
-    private Nodes<T> theFirstElement;
-    private Nodes<T> theLastElement;
-    private int population = 0;
-    public MyLinkedList() {}
 
-    public MyLinkedList(T... args) {
-        for (T arg : args) {
-            add(arg);
-        }
+public class MyLinkedList<T> implements List<T> {
+    private Node<T> start;
+    private Node<T> tail;
+    private int size = 0;
+
+    public MyLinkedList() {
     }
+
     public MyLinkedList(java.util.List<T> list) {
         for (T t : list) {
             add(t);
         }
     }
+
     @Override
     public void add(T value) {
-        this.add(value, population);
+        add(value, size);
     }
 
     @Override
     public void add(T value, int index) {
-        if (index < 0 || index > population)
-            throw new IndexOutOfBoundsException(index + " is out of the List boundary");
-        if(index == 0) {
-            if (theFirstElement == null) {
-                theFirstElement = new Nodes<>(value);
-                population++;
-                return;
-            }
-            Nodes<T> newElement = new Nodes<>(null, theFirstElement, value);
-            theFirstElement.setPrevious(newElement);
-            theFirstElement = newElement;
-        } else if (population - index == 0) {
-            if (theLastElement == null) {
-                theLastElement = new Nodes<>(theFirstElement, value);
-                theFirstElement.setNext(theLastElement);
-                population++;
-                return;
-            }
-            Nodes<T> newElement = new Nodes<>(theLastElement, value);
-            theLastElement.setNext(newElement);
-            theLastElement = newElement;
-        } else if (index <= (population/2)){
-            Nodes<T> current = theFirstElement;
-            for (int i = 0; i <= index; i++) {
-                current = current.getNext();
-            }
-           Nodes<T> newElement = new Nodes<>(current.getPrevious(), current, value);
-            current.getPrevious().setNext(newElement);
-            current.setPrevious(newElement);
-        } else {
-            Nodes<T> current = theLastElement;
-            for (int i = population-1; i > index; i--) {
-                current = current.getPrevious();
-            }
-            Nodes<T> newElement = new Nodes<>(current.getPrevious(), current, value);
-            current.getPrevious().setNext(newElement);
-            current.setPrevious(newElement);
+        checkBoundaryIncludeIndex(index);
+        if (index == 0) { // add to the BEGINNING
+            addToTheStart(value);
+            size++;
+            return;
         }
-        population++;
+        if (index == size) { //add to the TAIL
+            addToTheTail(value);
+            size++;
+            return;
+        }
+        if (index < (size / 2)) { //add to the MIDDLE
+            addValueToTheFirstHalf(value, index);
+        } else {
+            addValueToTheSecondHalf(value, index);
+        }
+        size++;
     }
 
     @Override
     public T remove(int index) {
-        if (index < 0 || index >= population)
-            throw new IndexOutOfBoundsException(index + " is out of the List boundary");
+        checkBoundaryExcludeIndex(index);
         T removedValue;
-        if(index == 0) {
-            removedValue = theFirstElement.getValue();
-            theFirstElement = theFirstElement.getNext();
-            theFirstElement.setPrevious(null);
-        } else if ((population-1) - index == 0) {
-            removedValue = theLastElement.getValue();
-            theLastElement.getPrevious().setNext(null);
-            theLastElement = theLastElement.getPrevious();
-        } else if (index <= (population/2)){
-            Nodes<T> current = theFirstElement;
-            for (int i = 0; i < index; i++) {
-                current = current.getNext();
+        if (index == 0) { // remove from The BEGINNING
+            if (tail == null) {
+                removedValue = start.value;
+                start = null;
+                size--;
+                return removedValue;
             }
-            removedValue = current.getValue();
-            current.getPrevious().setNext(current.getNext());
-            current.getNext().setPrevious(current.getPrevious());
-        } else {
-            Nodes<T> current = theLastElement;
-            for (int i = population; i > index ; i--) {
-                current = current.getPrevious();
-            }
-            removedValue = current.getValue();
-            //current.decreaseIndexNext();
-            current.getPrevious().setNext(current.getNext());
-            current.getNext().setPrevious(current.getPrevious());
+            removedValue = start.value;
+            start = start.next;
+            start.previous = null;
+            size--;
+            return removedValue;
         }
-        population--;
+        if (index == size - 1) { // remove from The TAIL
+            removedValue = tail.value;
+            tail = tail.previous;
+            tail.next = null;
+            size--;
+            return removedValue;
+        }
+        // remove from The MIDDLE
+        var removedNode = getNodeByIndex(index);
+        removedValue = removedNode.value;
+        removedNode.previous.next = removedNode.next;
+        removedNode.next.previous = removedNode.previous;
+        size--;
         return removedValue;
     }
 
     @Override
     public T get(int index) {
-        if (index < 0 || index >= population)
-            throw new IndexOutOfBoundsException(index + " is out of the List boundary");
-        Nodes<T> current;
-        if (index <= (population/2)){
-            current = theFirstElement;
-            for (int i = 0; i < index; i++) {
-                current = current.getNext();
-            }
-        } else {
-            current = theLastElement;
-            for (int i = population-1; i > index ; i--) {
-                current = current.getPrevious();
-            }
-        }
-        return current.getValue();
+        checkBoundaryExcludeIndex(index);
+        return getNodeByIndex(index).value;
     }
 
     @Override
     public T set(T value, int index) {
-        if (index < 0 || index >= population)
-            throw new IndexOutOfBoundsException(index + " is out of the List boundary");
+        checkBoundaryExcludeIndex(index);
         T replacedValue;
-        Nodes<T> current;
-        if (index <= (population/2)){
-            current = theFirstElement;
-            for (int i = 0; i < index; i++) {
-                current = current.getNext();
-            }
-        } else {
-            current = theLastElement;
-            for (int i = population-1; i > index ; i--) {
-                current = current.getPrevious();
-            }
-        }
-        replacedValue = current.getValue();
-        current.setValue(value);
+        Node<T> currentNode = getNodeByIndex(index);
+        replacedValue = currentNode.value;
+        currentNode.value = value;
         return replacedValue;
     }
 
     @Override
     public void clear() {
-        population = 0;
-        theFirstElement = null;
-        theLastElement = null;
+        size = 0;
+        start = null;
+        tail = null;
     }
 
     @Override
     public int size() {
-        return population;
+        return size;
     }
 
     @Override
     public boolean isEmpty() {
-        return population == 0;
+        return size == 0;
     }
 
     @Override
     public boolean contains(T value) {
-        for (T t : this) {
-            if (Objects.equals(t, value)) return true;
+        for (T valueInList : this) {
+            if (Objects.equals(valueInList, value)) return true;
         }
         return false;
     }
@@ -176,8 +125,8 @@ public class MyLinkedList <T> implements List<T> {
     public int indexOf(T value) {
         int nonCoincidence = -1;
         int count = 0;
-        for (T t : this) {
-            if (Objects.equals(t, value)) return count;
+        for (T valueInList : this) {
+            if (Objects.equals(valueInList, value)) return count;
             count++;
         }
         return nonCoincidence;
@@ -186,26 +135,24 @@ public class MyLinkedList <T> implements List<T> {
 
     @Override
     public int lastIndexOf(T value) {
-        int nonCoincidence = -1;
-        int count = population-1;
-            for (Nodes<T> nodes = theLastElement; nodes != null; nodes = nodes.getPrevious()) {
-                if (Objects.equals(nodes.getValue(), value)) {
-                    return count;
-                }
-                count--;
+        int count = size - 1;
+        for (Node<T> node = tail; node != null; node = node.previous) {
+            if (Objects.equals(node.value, value)) {
+                return count;
             }
-
-        return nonCoincidence;
+            count--;
+        }
+        return -1;
     }
 
     @Override
     public String toString() {
-        if (population == 0) {
+        if (size == 0) {
             return "[]";
         } else {
             StringJoiner stringJoiner = new StringJoiner(", ", "[", "]");
-            for (T t : this) {
-                stringJoiner.add(String.valueOf(t));
+            for (T value : this) {
+                stringJoiner.add(String.valueOf(value));
             }
             return stringJoiner.toString();
         }
@@ -218,18 +165,19 @@ public class MyLinkedList <T> implements List<T> {
 
             private int counter;
             private int removedLast;
-            private Nodes<T> current = theFirstElement;
+            private Node<T> current = start;
+
             @Override
             public boolean hasNext() {
-                return counter < population;
+                return counter < size;
             }
 
             @Override
             public T next() {
                 T value;
-                if(counter >= population) throw new NoSuchElementException("There is no more elements in the List");
-                value = current.getValue();
-                current = current.getNext();
+                if (counter >= size) throw new NoSuchElementException("There is no more elements in the List");
+                value = current.value;
+                current = current.next;
                 counter++;
 
                 return value;
@@ -238,57 +186,109 @@ public class MyLinkedList <T> implements List<T> {
             @Override
             public void remove() {
                 if (counter == 0) throw new IllegalStateException("\"You have called remove() before next()\"");
-                if(removedLast > 0) throw new IllegalStateException("\"You have called remove() after \"the last\" next()\"");
-                MyLinkedList.this.remove(counter-1);
+                if (removedLast > 0)
+                    throw new IllegalStateException("\"You have called remove() after \"the last\" next()\"");
+                MyLinkedList.this.remove(counter - 1);
                 counter--;
-                if(counter >= population) removedLast++;
-             }
+                if (counter >= size) removedLast++;
+            }
         };
     }
 
-    private static class Nodes<T> {
-        private Nodes<T> previous;
-        private Nodes<T> next;
+    private void addToTheStart(T value) {
+        if (start == null) {
+            start = new Node<>(value);
+        } else {
+            Node<T> newElement = new Node<>(null, start, value);
+            start.previous = newElement;
+            start = newElement;
+        }
+    }
+
+    private void addToTheTail(T value) {
+        Node<T> newElement;
+        if (tail == null) {
+            newElement = new Node<>(start, null, value);
+            start.next = newElement;
+        } else {
+            newElement = new Node<>(tail, null, value);
+            tail.next = newElement;
+        }
+        tail = newElement;
+    }
+
+    private void addValueToTheFirstHalf(T value, int index) {
+        int count = 0;
+        var currentNode = start;
+        while (count != index) {
+            currentNode = currentNode.next;
+            count++;
+        }
+        Node<T> newElement = new Node<>(currentNode.previous, currentNode, value);
+        currentNode.previous.next = newElement;
+        currentNode.previous = newElement;
+    }
+
+    private void addValueToTheSecondHalf(T value, int index) {
+        int count = 0;
+        var currentNode = tail;
+        while (count != size - index) {
+            currentNode = currentNode.previous;
+            count++;
+        }
+        Node<T> newElement = new Node<>(currentNode, currentNode.next, value);
+        currentNode.next.previous = newElement;
+        currentNode.next = newElement;
+    }
+
+    private Node<T> getNodeByIndex(int index) {
+        Node<T> currentNode;
+        if (index <= (size / 2)) {
+            currentNode = start;
+            for (int i = 0; i < index; i++) {
+                currentNode = currentNode.next;
+            }
+        } else {
+            currentNode = tail;
+            for (int i = size - 1; i > index; i--) {
+                currentNode = currentNode.previous;
+            }
+        }
+        return currentNode;
+    }
+
+    private void checkBoundaryIncludeIndex(int index) {
+        if (index < 0 || index > size) {
+            throw new IndexOutOfBoundsException("Current size is: " + size +
+                    " you have provided: " + index + " is out of the List boundary");
+        }
+    }
+
+    private void checkBoundaryExcludeIndex(int index) {
+        if (index == 0 && size == 0) {
+            throw new RuntimeException("There is nothing to do, Current size is: " + size);
+        }
+        if (index < 0 || index >= size) {
+            throw new IndexOutOfBoundsException("Current size is: " + size +
+                    " you have provided: " + index + " is out of the List size boundary -1");
+        }
+    }
+
+    private static class Node<T> {
+        private Node<T> previous;
+        private Node<T> next;
         private T value;
 
-        public Nodes(Nodes<T> previous, Nodes<T> next, T value) {
+        public Node(Node<T> previous, Node<T> next, T value) {
             this.previous = previous;
             this.next = next;
             this.value = value;
         }
-        public Nodes(T value) {
+
+        public Node(T value) {
             this.value = value;
             this.previous = null;
             this.next = null;
-        }
-        public Nodes(Nodes<T> previous, T value) {
-            this.previous = previous;
-            this.next = null;
-            this.value = value;
-        }
-
-        public Nodes<T> getNext() {
-            return next;
-        }
-
-        public Nodes<T> getPrevious() {
-            return previous;
-        }
-
-        public T getValue() {
-            return value;
-        }
-
-        public void setPrevious(Nodes<T> previous) {
-            this.previous = previous;
-        }
-
-        public void setNext(Nodes<T> next) {
-            this.next = next;
-        }
-
-        public void setValue(T value) {
-            this.value = value;
         }
     }
 }
