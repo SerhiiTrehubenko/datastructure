@@ -7,34 +7,36 @@ import java.util.NoSuchElementException;
 import java.util.Objects;
 import java.util.StringJoiner;
 
-public class MyArrayList<T> implements List<T> {
+public class ArrayList<T> implements List<T> {
 
     private final static int INIT_CAPACITY = 10;
     private double GROW_FACTOR = 1.5;
     private int size = 0;
-    @SuppressWarnings("unchecked")
-    private T[] array = (T[]) new Object[INIT_CAPACITY];
+    private Object[] array = new Object[INIT_CAPACITY];
 
-    public MyArrayList() {
+    public ArrayList() {
         this(null, (T[]) null);
     }
 
-    @SuppressWarnings("unchecked")
-    public MyArrayList(Double customCoefficientCapacity) {
-        this(customCoefficientCapacity, (T) null);
+    public ArrayList(Double customCoefficientCapacity) {
+        this(customCoefficientCapacity, (T[]) null);
     }
 
-    @SuppressWarnings("unchecked")
-    public MyArrayList(Double customCoefficientCapacity, T... arg) {
-        if (arg != null) {
-            if (arg.length > INIT_CAPACITY) this.array = (T[]) new Object[arg.length];
 
-            for (T t : arg) {
-                array[this.size++] = t;
+    public ArrayList(Double customCoefficientCapacity, T... arg) {
+        if (arg != null) {
+            if (arg.length > INIT_CAPACITY) {
+                this.array = new Object[arg.length];
+            }
+
+            for (T value : arg) {
+                array[this.size++] = value;
             }
         }
-        if (customCoefficientCapacity != null &&
-                customCoefficientCapacity > 1) GROW_FACTOR = customCoefficientCapacity;
+        if (customCoefficientCapacity != null && customCoefficientCapacity > 1) {
+            GROW_FACTOR = customCoefficientCapacity;
+        }
+        arg = null;
     }
 
     @Override
@@ -45,7 +47,7 @@ public class MyArrayList<T> implements List<T> {
     @Override
     public void add(T value, int index) {
         checkBoundaryIncludeIndex(index);
-        if (size + 1 >= array.length) {
+        if (size == array.length) {
             grow();
         }
 
@@ -65,7 +67,8 @@ public class MyArrayList<T> implements List<T> {
     @Override
     public T remove(int index) {
         checkBoundaryExcludeIndex(index);
-        T removedValue = array[index];
+        @SuppressWarnings("unchecked")
+        T removedValue = (T) array[index];
 
         if ((size - 1) == index) {
             array[index] = null;
@@ -83,22 +86,24 @@ public class MyArrayList<T> implements List<T> {
     @Override
     public T get(int index) {
         checkBoundaryExcludeIndex(index);
-        return array[index];
+        @SuppressWarnings("unchecked")
+        var returnedValue = (T) array[index];
+        return returnedValue;
     }
 
     @Override
     public T set(T value, int index) {
         checkBoundaryExcludeIndex(index);
-        T removed = array[index];
+        @SuppressWarnings("unchecked")
+        T removed = (T) array[index];
         array[index] = value;
         return removed;
     }
 
-    @SuppressWarnings("unchecked")
     @Override
     public void clear() {
         this.size = 0;
-        array = (T[]) new Object[array.length];
+        array = new Object[array.length];
 
     }
 
@@ -120,8 +125,10 @@ public class MyArrayList<T> implements List<T> {
     @Override
     public int indexOf(T value) {
         int count = 0;
-        for (T valuesInArray : array) {
-            if (Objects.equals(valuesInArray, value)) return count;
+        for (Object valuesInArray : array) {
+            if (Objects.equals(valuesInArray, value)) {
+                return count;
+            }
             count++;
         }
         return -1;
@@ -129,8 +136,10 @@ public class MyArrayList<T> implements List<T> {
 
     @Override
     public int lastIndexOf(T value) {
-        for (int i = size - 1; i > 0; i--) {
-            if (Objects.equals(array[i], value)) return i;
+        for (int i = size; i >= 0; i--) {
+            if (Objects.equals(array[i], value)) {
+                return i;
+            }
         }
         return -1;
     }
@@ -151,11 +160,11 @@ public class MyArrayList<T> implements List<T> {
                 if (counter >= size) {
                     throw new NoSuchElementException("There are no more elements in the List");
                 }
-                T value = array[counter];
+                @SuppressWarnings("unchecked")
+                T value = (T) array[counter];
                 counter++;
 
                 return value;
-
             }
 
             @Override
@@ -166,9 +175,11 @@ public class MyArrayList<T> implements List<T> {
                 if (removedLast) {
                     throw new IllegalStateException("\"You have called remove() after \"the last\" next()\"");
                 }
-                MyArrayList.this.remove(counter - 1);
+                ArrayList.this.remove(counter - 1);
                 counter--;
-                if (counter >= size) removedLast = true;
+                if (counter >= size) {
+                    removedLast = true;
+                }
             }
         };
     }
@@ -182,24 +193,24 @@ public class MyArrayList<T> implements List<T> {
         return stringJoiner.toString();
     }
 
-    @SuppressWarnings("unchecked")
     private void grow() {
-        T[] newBody = (T[]) new Object[(int) ((this.array.length * GROW_FACTOR) + 1)];
+        Object[] newBody = new Object[(int) ((this.array.length * GROW_FACTOR) + 1)];
         System.arraycopy(array, 0, newBody, 0, size);
         this.array = newBody;
     }
 
     private void checkBoundaryIncludeIndex(int index) {
         if (index < 0 || index > size) {
-            throw new IndexOutOfBoundsException("Current size is: " + size +
-                    "you have provided: " + index + " is out of the List boundary");
+            throw new IndexOutOfBoundsException("index can be in range: [0, " + size + "]" + ", you have provided " + index);
         }
     }
 
     private void checkBoundaryExcludeIndex(int index) {
+        if (index == 0 && size == 0) {
+            throw new RuntimeException("There is nothing to do, Current size is: 0");
+        }
         if (index < 0 || index >= size) {
-            throw new IndexOutOfBoundsException("Current size is: " + size +
-                    "you have provided: " + index + " is out of the List size boundary -1");
+            throw new IndexOutOfBoundsException("index can be in range: [0, " + size + ")" + ", you have provided " + index);
         }
     }
 }
