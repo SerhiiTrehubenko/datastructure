@@ -10,10 +10,10 @@ import java.util.StringJoiner;
 public class HashMap<K, V> implements Map<K, V> {
     private static final double NATIVE_LOAD_FACTOR = 0.75;
     private static final int NATIVE_GROW_FACTOR = 2;
-    private final double loadFactor;
     private static final int INITIAL_CAPACITY = 5;
+    private final double loadFactor;
     private Object[] buckets;
-    private int sizeMap;
+    private int size;
 
     public HashMap() {
         this(INITIAL_CAPACITY, NATIVE_LOAD_FACTOR);
@@ -32,23 +32,25 @@ public class HashMap<K, V> implements Map<K, V> {
         this.loadFactor = loadFactor;
     }
 
-    @SuppressWarnings("unchecked")
+
     @Override
     public V put(K key, V value) {
-        if (buckets.length * loadFactor <= sizeMap) {
+        if (buckets.length * loadFactor <= size) {
             grow();
         }
-        V retrievedValue;
-        int index = getIndex(key, buckets.length);
-
-        if (buckets[index] != null) {
-            retrievedValue = putValueToExistEntity(buckets[index], key, value);
-            if (retrievedValue != null) return retrievedValue;
+        var foundEntity = getEntryByKey(key);
+        if (foundEntity != null) {
+            var oldValue = foundEntity.value;
+            foundEntity.value = value;
+            return oldValue;
         }
+        int index = getIndex(key);
         var newElement = new Entry<>(key, value);
-        newElement.next = (Entry<K, V>)buckets[index];
+        @SuppressWarnings("unchecked")
+        var retrievedEntity = (Entry<K, V>) buckets[index];
+        newElement.next = retrievedEntity;
         buckets[index] = newElement;
-        sizeMap++;
+        size++;
         return null;
     }
 
@@ -71,7 +73,7 @@ public class HashMap<K, V> implements Map<K, V> {
 
     @Override
     public int size() {
-        return sizeMap;
+        return size;
     }
 
     @Override
@@ -85,16 +87,20 @@ public class HashMap<K, V> implements Map<K, V> {
 
             @Override
             public boolean hasNext() {
-                return counter < sizeMap;
+                return counter < size;
             }
 
-            @SuppressWarnings("unchecked")
+
             @Override
             public Entry<K, V> next() {
-                if (counter >= sizeMap) throw new NoSuchElementException("There is no more elements");
+                if (counter >= size) {
+                    throw new NoSuchElementException("There is no more elements");
+                }
 
                 while (currentEntry == null && position < buckets.length) {
-                    currentEntry = (Entry<K, V>) buckets[position];
+                    @SuppressWarnings("unchecked")
+                    var retrievedBucket = (Entry<K, V>) buckets[position];
+                    currentEntry = retrievedBucket;
                     position++;
                 }
 
@@ -114,7 +120,7 @@ public class HashMap<K, V> implements Map<K, V> {
                     throw new IllegalStateException("\"You have called remove() after \"the last\" next()\"");
                 }
                 HashMap.this.remove(returnedEntry.key);
-                if (counter >= sizeMap) {
+                if (counter >= size) {
                     removedLast = true;
                 }
             }
@@ -130,36 +136,23 @@ public class HashMap<K, V> implements Map<K, V> {
         return stringJoiner.toString();
     }
 
-    int getBucketsLength() {
-        return buckets.length;
+    private int getIndex(K key) {
+        return getIndex(key, buckets.length);
     }
 
-    private int getIndex(K key, int size) {
+    private int getIndex(K key, int bucketsLength) {
         int hashCode = Objects.hashCode(key);
-        return Math.abs(hashCode == Integer.MIN_VALUE ? 0 : Objects.hashCode(key) % size);
+        return Math.abs(hashCode == Integer.MIN_VALUE ? 0 : Objects.hashCode(key) % bucketsLength);
     }
-    @SuppressWarnings("unchecked")
-    private V putValueToExistEntity (Object bucket, K key, V value) {
-        V retrievedValue;
-        var currentEntity = (Entry<K, V>) bucket;
-        if (Objects.equals(currentEntity.hashCode(), Objects.hashCode(key)) &&
-                Objects.equals(currentEntity.key, key)) {
-            retrievedValue = currentEntity.value;
-            currentEntity.value = value;
-            return retrievedValue;
-        }
-        if (currentEntity.next != null) {
-            while (currentEntity.next != null) {
-                if (Objects.equals(currentEntity.next.hashCode(), Objects.hashCode(key)) &&
-                        Objects.equals(currentEntity.next.key, key)) {
-                    retrievedValue = currentEntity.next.value;
-                    currentEntity.next.value = value;
-                    return retrievedValue;
-                }
-                currentEntity = currentEntity.next;
-            }
-        }
-        return null;
+
+    private boolean checkKeyCoincide(Entry<K, V> entry, K key) {
+        return Objects.equals(entry.hashCode(), Objects.hashCode(key)) &&
+                Objects.equals(entry.key, key);
+    }
+
+    private boolean checkNextKeyCoincide(Entry<K, V> entry, K key) {
+        return Objects.equals(entry.next.hashCode(), Objects.hashCode(key)) &&
+                Objects.equals(entry.next.key, key);
     }
 
     private void grow() {
@@ -168,7 +161,7 @@ public class HashMap<K, V> implements Map<K, V> {
         buckets = newBuckets;
     }
 
-    @SuppressWarnings("unchecked")
+
     private void fillBucketsWithDoubledCapacity(Object[] newBuckets) {
         for (Map.Entry<K, V> myEntry : this) {
             var castedEntry = (Entry<K, V>) myEntry;
@@ -176,61 +169,64 @@ public class HashMap<K, V> implements Map<K, V> {
             if (newBuckets[index] == null) {
                 castedEntry.next = null;
             } else {
-                var retrievedMyEntry = newBuckets[index];
-                castedEntry.next = (Entry<K, V>) retrievedMyEntry;
+                @SuppressWarnings("unchecked")
+                var retrievedMyEntry = (Entry<K, V>) newBuckets[index];
+                castedEntry.next = retrievedMyEntry;
             }
             newBuckets[index] = castedEntry;
         }
     }
 
-    @SuppressWarnings("unchecked")
-    private Entry<K, V> getEntryByKey(K key) {
-        int index = getIndex(key, buckets.length);
 
-        if (buckets[index] != null) {
-            var entry = (Entry<K, V>) buckets[index];
-            if (Objects.equals(entry.hashCode(), Objects.hashCode(key)) && // checking the first Entry
-                    Objects.equals(entry.key, key)) {
-                return entry;
+    private Entry<K, V> getEntryByKey(K key) {
+        int index = getIndex(key);
+
+        if (buckets[index] == null) {
+            return null;
+        }
+        @SuppressWarnings("unchecked")
+        var entry = (Entry<K, V>) buckets[index];
+
+        if (checkKeyCoincide(entry, key)) {          // checking the first Entry
+            return entry;
+        }
+
+        while (entry.next != null) {                // checking Entries from the second to the end
+            if (checkNextKeyCoincide(entry, key)) {
+                return entry.next;
             }
-            if (entry.next != null) {
-                while (entry.next != null) { // checking Entries from the second to the end
-                    if (Objects.equals(entry.next.hashCode(), Objects.hashCode(key)) &&
-                            Objects.equals(entry.next.key, key)) {
-                        return entry.next;
-                    }
-                    entry = entry.next;
-                }
-            }
+            entry = entry.next;
         }
         return null;
     }
 
-    @SuppressWarnings("unchecked")
+
     private Entry<K, V> removeEntryByKey(K key) {
-        int index = getIndex(key, buckets.length);
-        var foundBucket = buckets[index];
+        int index = getIndex(key);
+
         Entry<K, V> retrievedEntry;
-        if (foundBucket != null) {
-            var entry = (Entry<K, V>) foundBucket;
-            if (Objects.equals(entry.hashCode(), Objects.hashCode(key)) && // checking the first Entry
-                    Objects.equals(entry.key, key)) {
-                buckets[index] = entry.next;
-                sizeMap--;
-                return entry;
+
+        if (buckets[index] == null) {
+            return null;
+        }
+
+        @SuppressWarnings("unchecked")
+        var entry = (Entry<K, V>) buckets[index];
+
+        if (checkKeyCoincide(entry, key)) {         // checking the first Entry
+            buckets[index] = entry.next;
+            size--;
+            return entry;
+        }
+
+        while (entry.next != null) {                // checking Entries from the second to the end
+            if (checkNextKeyCoincide(entry, key)) {
+                retrievedEntry = entry.next;
+                entry.next = entry.next.next;
+                size--;
+                return retrievedEntry;
             }
-            if (entry.next != null) {
-                while (entry.next != null) { // checking Entries from the second to the end
-                    if (Objects.equals(entry.next.hashCode(), Objects.hashCode(key)) &&
-                            Objects.equals(entry.next.key, key)) {
-                        retrievedEntry = entry.next;
-                        entry.next = entry.next.next;
-                        sizeMap--;
-                        return retrievedEntry;
-                    }
-                    entry = entry.next;
-                }
-            }
+            entry = entry.next;
         }
         return null;
     }

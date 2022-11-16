@@ -1,5 +1,6 @@
-package com.tsa.list.implementations;
+package test;
 
+import com.tsa.list.implementations.HashMap;
 import com.tsa.list.interfaces.Map;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -7,6 +8,7 @@ import org.junit.jupiter.api.Test;
 
 import java.util.Iterator;
 import java.util.NoSuchElementException;
+import java.util.Objects;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -42,30 +44,6 @@ class HashMapTest {
         map.put(null, "Hello");
         assertEquals("Hello", map.get(null));
     }
-
-    @Test
-    void testNativeLoadFactor() {
-        // capacity by default = 5;
-        assertEquals(5, ((HashMap<?, ?>)map).getBucketsLength());
-
-        //Puts in tha map "6" values
-        mapFiller();
-
-        // if reached loadFactor = 0.75 (5 * 0.75 ~ 4) -> capacity * 2 = 10;
-        assertEquals(10, ((HashMap<?, ?>)map).getBucketsLength());
-    }
-
-    @Test
-    void testCustomLoadFactor() {
-        Map<Object, Object> mapCustomLoadFactor = new HashMap<>(0.2);
-
-        mapCustomLoadFactor.put("hello", "world");
-        mapCustomLoadFactor.put("Java", "world");
-
-        // if reached loadFactor = 0.75 (5 * 0.2 ~ 1) -> initial_capacity(5) * 2 = 10;
-        assertEquals(10, ((HashMap<?, ?>)mapCustomLoadFactor).getBucketsLength());
-    }
-
 
     @Test
     void get() {
@@ -172,6 +150,16 @@ class HashMapTest {
         map.put("myClass", new MyClass());
     }
 
+    @Test
+    void name() {
+//        map.put("", "emptyKey");
+//        map.put("Hello", "world!");
+//        map.put(null, null);
+//        map.put(25.25, "double");
+//        map.put(100, "integer");
+//        map.put("myClass", new MyClass());
+        System.out.println(Objects.hashCode(25.25));
+    }
 }
 class MyClass {
     private int index;
