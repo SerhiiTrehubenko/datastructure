@@ -136,7 +136,7 @@ public class ArrayList<T> implements List<T> {
 
     @Override
     public int lastIndexOf(T value) {
-        for (int i = size; i >= 0; i--) {
+        for (int i = size - 1; i >= 0; i--) {
             if (Objects.equals(array[i], value)) {
                 return i;
             }
@@ -207,7 +207,7 @@ public class ArrayList<T> implements List<T> {
 
     private void checkBoundaryExcludeIndex(int index) {
         if (index == 0 && size == 0) {
-            throw new RuntimeException("There is nothing to do, Current size is: 0");
+            throw new IndexOutOfBoundsException("There is nothing to do, Current size is: " + size);
         }
         if (index < 0 || index >= size) {
             throw new IndexOutOfBoundsException("index can be in range: [0, " + size + ")" + ", you have provided " + index);
