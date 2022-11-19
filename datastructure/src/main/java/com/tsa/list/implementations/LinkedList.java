@@ -75,9 +75,8 @@ public class LinkedList<T> implements List<T> {
     @Override
     public T set(T value, int index) {
         checkBoundaryExcludeIndex(index);
-        T replacedValue;
         Node<T> currentNode = getNodeByIndex(index);
-        replacedValue = currentNode.value;
+        T replacedValue = currentNode.value;
         currentNode.value = value;
         return replacedValue;
     }
@@ -266,11 +265,11 @@ public class LinkedList<T> implements List<T> {
         private Node<T> next;
         private T value;
 
-        public Node(T value) {
+        Node(T value) {
             this(null, null, value);
         }
 
-        public Node(Node<T> previous, Node<T> next, T value) {
+        Node(Node<T> previous, Node<T> next, T value) {
             this.previous = previous;
             this.next = next;
             this.value = value;
