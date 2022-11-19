@@ -7,17 +7,17 @@ import java.util.NoSuchElementException;
 import java.util.Objects;
 import java.util.StringJoiner;
 
-public class MyLinkedList<T> implements List<T> {
+public class LinkedList<T> implements List<T> {
     private Node<T> start;
     private Node<T> tail;
-    private int size = 0;
+    private int size;
 
-    public MyLinkedList() {
+    public LinkedList() {
     }
 
-    public MyLinkedList(java.util.List<T> list) {
-        for (T t : list) {
-            add(t);
+    public LinkedList(java.util.List<T> list) {
+        for (T value : list) {
+            add(value);
         }
     }
 
@@ -31,15 +31,9 @@ public class MyLinkedList<T> implements List<T> {
         checkBoundaryIncludeIndex(index);
         if (index == 0) { // add to the BEGINNING
             addToTheStart(value);
-            size++;
-            return;
-        }
-        if (index == size) { //add to the TAIL
+        } else if (index == size) { //add to the TAIL
             addToTheTail(value);
-            size++;
-            return;
-        }
-        if (index < (size / 2)) { //add to the MIDDLE
+        } else if (isFirstHalfOfList(index)) { //add to the MIDDLE
             addValueToTheFirstHalf(value, index);
         } else {
             addValueToTheSecondHalf(value, index);
@@ -50,34 +44,26 @@ public class MyLinkedList<T> implements List<T> {
     @Override
     public T remove(int index) {
         checkBoundaryExcludeIndex(index);
-        T removedValue;
-        if (index == 0) { // remove from The BEGINNING
-            if (tail == null) {
-                removedValue = start.value;
-                start = null;
-                size--;
-                return removedValue;
-            }
-            removedValue = start.value;
+        Node<T> removedNode;
+        if (size == 1) {
+            removedNode = start;
+            start = tail = null;
+        } else if (index == 0) {
+            removedNode = start;
             start = start.next;
             start.previous = null;
-            size--;
-            return removedValue;
-        }
-        if (index == size - 1) { // remove from The TAIL
-            removedValue = tail.value;
+        } else if (index == (size - 1)) {
+            removedNode = tail;
             tail = tail.previous;
             tail.next = null;
-            size--;
-            return removedValue;
+        } else {
+            Node<T> foundNode = getNodeByIndex(index);
+            removedNode = foundNode;
+            foundNode.previous.next = foundNode.next;
+            foundNode.next.previous = foundNode.previous;
         }
-        // remove from The MIDDLE
-        var removedNode = getNodeByIndex(index);
-        removedValue = removedNode.value;
-        removedNode.previous.next = removedNode.next;
-        removedNode.next.previous = removedNode.previous;
         size--;
-        return removedValue;
+        return removedNode.value;
     }
 
     @Override
@@ -115,22 +101,19 @@ public class MyLinkedList<T> implements List<T> {
 
     @Override
     public boolean contains(T value) {
-        for (T valueInList : this) {
-            if (Objects.equals(valueInList, value)) return true;
-        }
-        return false;
+        return indexOf(value) != -1;
     }
 
     @Override
     public int indexOf(T value) {
-        int nonCoincidence = -1;
         int count = 0;
         for (T valueInList : this) {
-            if (Objects.equals(valueInList, value)) return count;
+            if (Objects.equals(valueInList, value)) {
+                return count;
+            }
             count++;
         }
-        return nonCoincidence;
-
+        return -1;
     }
 
     @Override
@@ -147,50 +130,51 @@ public class MyLinkedList<T> implements List<T> {
 
     @Override
     public String toString() {
-        if (size == 0) {
-            return "[]";
-        } else {
-            StringJoiner stringJoiner = new StringJoiner(", ", "[", "]");
-            for (T value : this) {
-                stringJoiner.add(String.valueOf(value));
-            }
-            return stringJoiner.toString();
+        StringJoiner stringJoiner = new StringJoiner(", ", "[", "]");
+        for (T value : this) {
+            stringJoiner.add(String.valueOf(value));
         }
-
+        return stringJoiner.toString();
     }
 
     @Override
     public Iterator<T> iterator() {
         return new Iterator<>() {
 
-            private int counter;
-            private int removedLast;
+            private boolean isLastNext;
             private Node<T> current = start;
+            private Node<T> previous;
 
             @Override
             public boolean hasNext() {
-                return counter < size;
+                return current != null;
             }
 
             @Override
             public T next() {
-                T value;
-                if (counter >= size) throw new NoSuchElementException("There is no more elements in the List");
-                value = current.value;
+                if (!hasNext()) {
+                    throw new NoSuchElementException("There is no more elements in the List");
+                }
+                T value = current.value;
+                previous = current;
                 current = current.next;
-                counter++;
 
                 return value;
             }
 
             @Override
             public void remove() {
-                if (counter == 0) throw new IllegalStateException("\"You have called remove() before next()\"");
-                if (removedLast > 0)
+                if (current == start) {
+                    throw new IllegalStateException("\"You have called remove() before next()\"");
+                }
+                if (isLastNext) {
                     throw new IllegalStateException("\"You have called remove() after \"the last\" next()\"");
-                MyLinkedList.this.remove(counter - 1);
-                counter--;
-                if (counter >= size) removedLast++;
+                }
+                if (previous == tail) {
+                    isLastNext = true;
+                }
+                removeNode(previous);
+                size--;
             }
         };
     }
@@ -198,6 +182,7 @@ public class MyLinkedList<T> implements List<T> {
     private void addToTheStart(T value) {
         if (start == null) {
             start = new Node<>(value);
+            tail = start;
         } else {
             Node<T> newElement = new Node<>(null, start, value);
             start.previous = newElement;
@@ -206,44 +191,33 @@ public class MyLinkedList<T> implements List<T> {
     }
 
     private void addToTheTail(T value) {
-        Node<T> newElement;
-        if (tail == null) {
-            newElement = new Node<>(start, null, value);
-            start.next = newElement;
-        } else {
-            newElement = new Node<>(tail, null, value);
-            tail.next = newElement;
-        }
+        Node<T> newElement = new Node<>(tail, null, value);
+        tail.next = newElement;
+
         tail = newElement;
     }
 
     private void addValueToTheFirstHalf(T value, int index) {
-        int count = 0;
-        var currentNode = start;
-        while (count != index) {
-            currentNode = currentNode.next;
-            count++;
-        }
+        var currentNode = getNodeByIndex(index);
         Node<T> newElement = new Node<>(currentNode.previous, currentNode, value);
         currentNode.previous.next = newElement;
         currentNode.previous = newElement;
     }
 
     private void addValueToTheSecondHalf(T value, int index) {
-        int count = 0;
-        var currentNode = tail;
-        while (count != size - index) {
-            currentNode = currentNode.previous;
-            count++;
-        }
+        var currentNode = getNodeByIndex(index - 1);
         Node<T> newElement = new Node<>(currentNode, currentNode.next, value);
         currentNode.next.previous = newElement;
         currentNode.next = newElement;
     }
 
+    private boolean isFirstHalfOfList(int index) {
+        return index < (size / 2);
+    }
+
     private Node<T> getNodeByIndex(int index) {
         Node<T> currentNode;
-        if (index <= (size / 2)) {
+        if (isFirstHalfOfList(index)) {
             currentNode = start;
             for (int i = 0; i < index; i++) {
                 currentNode = currentNode.next;
@@ -257,20 +231,33 @@ public class MyLinkedList<T> implements List<T> {
         return currentNode;
     }
 
+    private void removeNode(Node<T> foundNode) {
+        if (foundNode == start && foundNode == tail) {
+            start = tail = null;
+        } else if (foundNode == start) {
+            start = start.next;
+            start.previous = null;
+        } else if (foundNode == tail) {
+            tail = tail.previous;
+            tail.next = null;
+        } else {
+            foundNode.previous.next = foundNode.next;
+            foundNode.next.previous = foundNode.previous;
+        }
+    }
+
     private void checkBoundaryIncludeIndex(int index) {
         if (index < 0 || index > size) {
-            throw new IndexOutOfBoundsException("Current size is: " + size +
-                    " you have provided: " + index + " is out of the List boundary");
+            throw new IndexOutOfBoundsException("index can be in range: [0, " + size + "]" + ", you have provided " + index);
         }
     }
 
     private void checkBoundaryExcludeIndex(int index) {
         if (index == 0 && size == 0) {
-            throw new RuntimeException("There is nothing to do, Current size is: " + size);
+            throw new IndexOutOfBoundsException("There is nothing to do, Current size is: " + size);
         }
         if (index < 0 || index >= size) {
-            throw new IndexOutOfBoundsException("Current size is: " + size +
-                    " you have provided: " + index + " is out of the List size boundary -1");
+            throw new IndexOutOfBoundsException("index can be in range: [0, " + size + ")" + ", you have provided " + index);
         }
     }
 
@@ -279,16 +266,14 @@ public class MyLinkedList<T> implements List<T> {
         private Node<T> next;
         private T value;
 
+        public Node(T value) {
+            this(null, null, value);
+        }
+
         public Node(Node<T> previous, Node<T> next, T value) {
             this.previous = previous;
             this.next = next;
             this.value = value;
-        }
-
-        public Node(T value) {
-            this.value = value;
-            this.previous = null;
-            this.next = null;
         }
     }
 }

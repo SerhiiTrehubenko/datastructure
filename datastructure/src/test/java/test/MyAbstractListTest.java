@@ -128,12 +128,12 @@ public abstract class MyAbstractListTest {
     }
 
     @Test
-    void testGetByIndexWhenListEmpty() {
+    public void testGetByIndexWhenListEmpty() {
         assertThrows(RuntimeException.class, () -> array.get(0), "There is nothing to do, Current size is: 0");
     }
 
     @Test
-    void testGetByIndexWhenListHasOneElement() {
+    public void testGetByIndexWhenListHasOneElement() {
         array.add(99);
         assertEquals(99, array.get(0));
     }
@@ -170,7 +170,7 @@ public abstract class MyAbstractListTest {
     }
 
     @Test
-    void testClearWhenListEmpty() {
+    public void testClearWhenListEmpty() {
         assertEquals(0, array.size());
         array.clear();
         assertEquals(0, array.size());
@@ -191,7 +191,7 @@ public abstract class MyAbstractListTest {
     }
 
     @Test
-    void testIsEmptyWhenToListWasAddedAndThenDeletedValue() {
+    public void testIsEmptyWhenToListWasAddedAndThenDeletedValue() {
         assertEquals(0, array.size());
         array.add(10);
         assertEquals(1, array.size());
@@ -207,13 +207,13 @@ public abstract class MyAbstractListTest {
     }
 
     @Test
-    void testContainsWhenListEmpty() {
+    public void testContainsWhenListEmpty() {
         assertEquals(0, array.size());
         assertFalse(array.contains(99));
     }
 
     @Test
-    void testContainsWhenValueWasAddedAndThenWasDeleted() {
+    public void testContainsWhenValueWasAddedAndThenWasDeleted() {
         populateList();
         assertEquals(5, array.size());
         array.add(99, 3);
@@ -239,7 +239,7 @@ public abstract class MyAbstractListTest {
     }
 
     @Test
-    void testIndexOfListIsEmpty() {
+    public void testIndexOfListIsEmpty() {
         assertEquals(0, array.size());
         assertEquals(-1, array.indexOf(1));
     }
@@ -275,7 +275,7 @@ public abstract class MyAbstractListTest {
     }
 
     @Test
-    void testLastIndexOfListIsEmpty() {
+    public void testLastIndexOfListIsEmpty() {
         assertEquals(0, array.size());
         assertEquals(-1, array.lastIndexOf(1));
     }
