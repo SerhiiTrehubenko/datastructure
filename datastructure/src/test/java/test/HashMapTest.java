@@ -136,7 +136,7 @@ class HashMapTest {
         assertThrows(NoSuchElementException.class, iterator::next, "There is no more elements in the List");
     }
     @Test
-    void toStr() {
+    void testToString() {
         mapFiller();
         assertEquals("[100=integer, =emptyKey, Hello=world!, null=null, 25.25=double, myClass=MyClass{ 1 }]",
                 map.toString());
@@ -148,17 +148,6 @@ class HashMapTest {
         map.put(25.25, "double");
         map.put(100, "integer");
         map.put("myClass", new MyClass());
-    }
-
-    @Test
-    void name() {
-//        map.put("", "emptyKey");
-//        map.put("Hello", "world!");
-//        map.put(null, null);
-//        map.put(25.25, "double");
-//        map.put(100, "integer");
-//        map.put("myClass", new MyClass());
-        System.out.println(Objects.hashCode(25.25));
     }
 }
 class MyClass {
