@@ -8,8 +8,8 @@ import java.util.Objects;
 import java.util.StringJoiner;
 
 public class LinkedList<T> implements List<T> {
-    private Node<T> start;
-    private Node<T> tail;
+    private Node<T> first;
+    private Node<T> last;
     private int size;
 
     public LinkedList() {
@@ -29,52 +29,42 @@ public class LinkedList<T> implements List<T> {
     @Override
     public void add(T value, int index) {
         checkBoundaryIncludeIndex(index);
-        if (index == 0) { // add to the BEGINNING
-            addToTheStart(value);
+        if (isEmpty()) {
+            first = last = new Node<>(value);
+        } else if (index == 0) { // add to the BEGINNING
+            Node<T> newElement = new Node<>(value);
+            newElement.next = first;
+            first.previous = newElement;
+            first = newElement;
         } else if (index == size) { //add to the TAIL
-            addToTheTail(value);
-        } else if (isFirstHalfOfList(index)) { //add to the MIDDLE
-            addValueToTheFirstHalf(value, index);
-        } else {
-            addValueToTheSecondHalf(value, index);
+            Node<T> newElement = new Node<>(value);
+            newElement.previous = last;
+            last.next = newElement;
+            last = newElement;
+        } else { //add to the MIDDLE
+            var currentNode = getNodeByIndex(index);
+            Node<T> newElement = new Node<>(currentNode.previous, currentNode, value);
+            currentNode.previous.next = newElement;
+            currentNode.previous = newElement;
         }
         size++;
     }
 
     @Override
     public T remove(int index) {
-        checkBoundaryExcludeIndex(index);
-        Node<T> removedNode;
-        if (size == 1) {
-            removedNode = start;
-            start = tail = null;
-        } else if (index == 0) {
-            removedNode = start;
-            start = start.next;
-            start.previous = null;
-        } else if (index == (size - 1)) {
-            removedNode = tail;
-            tail = tail.previous;
-            tail.next = null;
-        } else {
-            Node<T> foundNode = getNodeByIndex(index);
-            removedNode = foundNode;
-            foundNode.previous.next = foundNode.next;
-            foundNode.next.previous = foundNode.previous;
-        }
-        size--;
+        Node<T> removedNode = getNodeByIndex(index);
+        removeNode(removedNode);
+
         return removedNode.value;
     }
 
     @Override
     public T get(int index) {
-        checkBoundaryExcludeIndex(index);
         return getNodeByIndex(index).value;
     }
 
     @Override
     public T set(T value, int index) {
-        checkBoundaryExcludeIndex(index);
         Node<T> currentNode = getNodeByIndex(index);
         T replacedValue = currentNode.value;
         currentNode.value = value;
@@ -84,8 +74,8 @@ public class LinkedList<T> implements List<T> {
     @Override
     public void clear() {
         size = 0;
-        start = null;
-        tail = null;
+        first = null;
+        last = null;
     }
 
     @Override
@@ -105,24 +95,24 @@ public class LinkedList<T> implements List<T> {
 
     @Override
     public int indexOf(T value) {
-        int count = 0;
+        int index = 0;
         for (T valueInList : this) {
             if (Objects.equals(valueInList, value)) {
-                return count;
+                return index;
             }
-            count++;
+            index++;
         }
         return -1;
     }
 
     @Override
     public int lastIndexOf(T value) {
-        int count = size - 1;
-        for (Node<T> node = tail; node != null; node = node.previous) {
+        int index = size - 1;
+        for (Node<T> node = last; node != null; node = node.previous) {
             if (Objects.equals(node.value, value)) {
-                return count;
+                return index;
             }
-            count--;
+            index--;
         }
         return -1;
     }
@@ -141,7 +131,7 @@ public class LinkedList<T> implements List<T> {
         return new Iterator<>() {
 
             private boolean isLastNext;
-            private Node<T> current = start;
+            private Node<T> current = first;
             private Node<T> previous;
 
             @Override
@@ -163,51 +153,18 @@ public class LinkedList<T> implements List<T> {
 
             @Override
             public void remove() {
-                if (current == start) {
+                if (current == first) {
                     throw new IllegalStateException("\"You have called remove() before next()\"");
                 }
                 if (isLastNext) {
                     throw new IllegalStateException("\"You have called remove() after \"the last\" next()\"");
                 }
-                if (previous == tail) {
+                if (previous == last) {
                     isLastNext = true;
                 }
                 removeNode(previous);
-                size--;
             }
         };
-    }
-
-    private void addToTheStart(T value) {
-        if (start == null) {
-            start = new Node<>(value);
-            tail = start;
-        } else {
-            Node<T> newElement = new Node<>(null, start, value);
-            start.previous = newElement;
-            start = newElement;
-        }
-    }
-
-    private void addToTheTail(T value) {
-        Node<T> newElement = new Node<>(tail, null, value);
-        tail.next = newElement;
-
-        tail = newElement;
-    }
-
-    private void addValueToTheFirstHalf(T value, int index) {
-        var currentNode = getNodeByIndex(index);
-        Node<T> newElement = new Node<>(currentNode.previous, currentNode, value);
-        currentNode.previous.next = newElement;
-        currentNode.previous = newElement;
-    }
-
-    private void addValueToTheSecondHalf(T value, int index) {
-        var currentNode = getNodeByIndex(index - 1);
-        Node<T> newElement = new Node<>(currentNode, currentNode.next, value);
-        currentNode.next.previous = newElement;
-        currentNode.next = newElement;
     }
 
     private boolean isFirstHalfOfList(int index) {
@@ -215,14 +172,15 @@ public class LinkedList<T> implements List<T> {
     }
 
     private Node<T> getNodeByIndex(int index) {
+        checkBoundaryExcludeIndex(index);
         Node<T> currentNode;
         if (isFirstHalfOfList(index)) {
-            currentNode = start;
+            currentNode = first;
             for (int i = 0; i < index; i++) {
                 currentNode = currentNode.next;
             }
         } else {
-            currentNode = tail;
+            currentNode = last;
             for (int i = size - 1; i > index; i--) {
                 currentNode = currentNode.previous;
             }
@@ -231,18 +189,19 @@ public class LinkedList<T> implements List<T> {
     }
 
     private void removeNode(Node<T> foundNode) {
-        if (foundNode == start && foundNode == tail) {
-            start = tail = null;
-        } else if (foundNode == start) {
-            start = start.next;
-            start.previous = null;
-        } else if (foundNode == tail) {
-            tail = tail.previous;
-            tail.next = null;
+        if (foundNode == first && foundNode == last) {
+            first = last = null;
+        } else if (foundNode == first) {
+            first = first.next;
+            first.previous = null;
+        } else if (foundNode == last) {
+            last = last.previous;
+            last.next = null;
         } else {
             foundNode.previous.next = foundNode.next;
             foundNode.next.previous = foundNode.previous;
         }
+        size--;
     }
 
     private void checkBoundaryIncludeIndex(int index) {
@@ -265,11 +224,11 @@ public class LinkedList<T> implements List<T> {
         private Node<T> next;
         private T value;
 
-        Node(T value) {
+        private Node(T value) {
             this(null, null, value);
         }
 
-        Node(Node<T> previous, Node<T> next, T value) {
+        private Node(Node<T> previous, Node<T> next, T value) {
             this.previous = previous;
             this.next = next;
             this.value = value;
