@@ -9,10 +9,11 @@ import java.util.StringJoiner;
 
 public class ArrayList<T> implements List<T> {
 
-    private final static int INIT_CAPACITY = 10;
+    private final static int INITIAL_CAPACITY = 10;
     private double GROW_FACTOR = 1.5;
     private int size = 0;
-    private Object[] array = new Object[INIT_CAPACITY];
+    @SuppressWarnings("unchecked")
+    private T[] array = (T[]) new Object[INITIAL_CAPACITY];
 
     public ArrayList() {
         this(null, (T[]) null);
@@ -22,21 +23,20 @@ public class ArrayList<T> implements List<T> {
         this(customCoefficientCapacity, (T[]) null);
     }
 
-
+    @SuppressWarnings("unchecked")
     public ArrayList(Double customCoefficientCapacity, T... arg) {
         if (arg != null) {
-            if (arg.length > INIT_CAPACITY) {
-                this.array = new Object[arg.length];
+            if (arg.length > INITIAL_CAPACITY) {
+                array = (T[]) new Object[arg.length];
             }
 
             for (T value : arg) {
-                array[this.size++] = value;
+                array[size++] = value;
             }
         }
         if (customCoefficientCapacity != null && customCoefficientCapacity > 1) {
             GROW_FACTOR = customCoefficientCapacity;
         }
-        arg = null;
     }
 
     @Override
@@ -50,34 +50,25 @@ public class ArrayList<T> implements List<T> {
         if (size == array.length) {
             grow();
         }
-
-        if ((size - index) == 0) { // add to the tail
-            array[index] = value;
-            size++;
-            return;
+        if (size != index) { // add to the middle
+            System.arraycopy(array, index, array, index + 1, size - index);
         }
-        System.arraycopy(array, index, array, index + 1, size - index);
-
+        array[index] = value;
         size++;
-
-        this.array[index] = value;
     }
 
 
     @Override
     public T remove(int index) {
         checkBoundaryExcludeIndex(index);
-        @SuppressWarnings("unchecked")
-        T removedValue = (T) array[index];
 
-        if ((size - 1) == index) {
-            array[index] = null;
-            size--;
-            return removedValue;
+        T removedValue = array[index];
+
+        if (index != (size - 1)) {
+            System.arraycopy(array, index + 1, array, index, size - index);
         }
 
-        System.arraycopy(array, index + 1, array, index, size - index);
-
+        array[size - 1] = null;
         size--;
 
         return removedValue;
@@ -86,24 +77,22 @@ public class ArrayList<T> implements List<T> {
     @Override
     public T get(int index) {
         checkBoundaryExcludeIndex(index);
-        @SuppressWarnings("unchecked")
-        var returnedValue = (T) array[index];
-        return returnedValue;
+        return array[index];
     }
 
     @Override
     public T set(T value, int index) {
         checkBoundaryExcludeIndex(index);
-        @SuppressWarnings("unchecked")
-        T removed = (T) array[index];
+        T removed = array[index];
         array[index] = value;
         return removed;
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     public void clear() {
-        this.size = 0;
-        array = new Object[array.length];
+        size = 0;
+        array = (T[]) new Object[array.length];
 
     }
 
@@ -125,8 +114,8 @@ public class ArrayList<T> implements List<T> {
     @Override
     public int indexOf(T value) {
         int count = 0;
-        for (Object valuesInArray : array) {
-            if (Objects.equals(valuesInArray, value)) {
+        for (T valueInArray : array) {
+            if (Objects.equals(valueInArray, value)) {
                 return count;
             }
             count++;
@@ -160,8 +149,8 @@ public class ArrayList<T> implements List<T> {
                 if (counter >= size) {
                     throw new NoSuchElementException("There are no more elements in the List");
                 }
-                @SuppressWarnings("unchecked")
-                T value = (T) array[counter];
+
+                T value = array[counter];
                 counter++;
 
                 return value;
@@ -193,16 +182,17 @@ public class ArrayList<T> implements List<T> {
         return stringJoiner.toString();
     }
 
-    private void grow() {
-        Object[] newBody = new Object[(int) ((this.array.length * GROW_FACTOR) + 1)];
-        System.arraycopy(array, 0, newBody, 0, size);
-        this.array = newBody;
-    }
-
     private void checkBoundaryIncludeIndex(int index) {
         if (index < 0 || index > size) {
             throw new IndexOutOfBoundsException("index can be in range: [0, " + size + "]" + ", you have provided " + index);
         }
+    }
+
+    private void grow() {
+        @SuppressWarnings("unchecked")
+        T[] newArray = (T[]) new Object[(int) ((array.length * GROW_FACTOR) + 1)];
+        System.arraycopy(array, 0, newArray, 0, size);
+        array = newArray;
     }
 
     private void checkBoundaryExcludeIndex(int index) {
