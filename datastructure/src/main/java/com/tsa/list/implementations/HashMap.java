@@ -8,27 +8,27 @@ import java.util.Objects;
 import java.util.StringJoiner;
 
 public class HashMap<K, V> implements Map<K, V> {
-    private static final double NATIVE_LOAD_FACTOR = 0.75;
-    private static final int NATIVE_GROW_FACTOR = 2;
+    private static final double DEFAULT_LOAD_FACTOR = 0.75;
+    private static final int DEFAULT_GROW_FACTOR = 2;
     private static final int INITIAL_CAPACITY = 5;
     private final double loadFactor;
-    private Object[] buckets;
+    private Entry<K,V>[] buckets;
     private int size;
 
     public HashMap() {
-        this(INITIAL_CAPACITY, NATIVE_LOAD_FACTOR);
+        this(INITIAL_CAPACITY, DEFAULT_LOAD_FACTOR);
     }
 
     public HashMap(int initialCapacity) {
-        this(initialCapacity, NATIVE_LOAD_FACTOR);
+        this(initialCapacity, DEFAULT_LOAD_FACTOR);
     }
 
     public HashMap(double loadFactor) {
         this(INITIAL_CAPACITY, loadFactor);
     }
-
+    @SuppressWarnings("unchecked")
     public HashMap(int initialCapacity, double loadFactor) {
-        this.buckets = new Object[initialCapacity];
+        this.buckets = (Entry<K,V>[]) new Entry[initialCapacity];
         this.loadFactor = loadFactor;
     }
 
@@ -46,9 +46,8 @@ public class HashMap<K, V> implements Map<K, V> {
         }
         int index = getIndex(key);
         var newElement = new Entry<>(key, value);
-        @SuppressWarnings("unchecked")
-        var retrievedEntity = (Entry<K, V>) buckets[index];
-        newElement.next = retrievedEntity;
+
+        newElement.next = buckets[index];
         buckets[index] = newElement;
         size++;
         return null;
@@ -98,9 +97,8 @@ public class HashMap<K, V> implements Map<K, V> {
                 }
 
                 while (currentEntry == null && position < buckets.length) {
-                    @SuppressWarnings("unchecked")
-                    var retrievedBucket = (Entry<K, V>) buckets[position];
-                    currentEntry = retrievedBucket;
+
+                    currentEntry = buckets[position];
                     position++;
                 }
 
@@ -156,22 +154,22 @@ public class HashMap<K, V> implements Map<K, V> {
     }
 
     private void grow() {
-        Object[] newBuckets = new Object[buckets.length * NATIVE_GROW_FACTOR];
+        @SuppressWarnings("unchecked")
+        Entry<K,V>[] newBuckets = (Entry<K,V>[]) new Entry[buckets.length * DEFAULT_GROW_FACTOR];
         fillBucketsWithDoubledCapacity(newBuckets);
         buckets = newBuckets;
     }
 
 
-    private void fillBucketsWithDoubledCapacity(Object[] newBuckets) {
+    private void fillBucketsWithDoubledCapacity(Entry<K,V>[] newBuckets) {
         for (Map.Entry<K, V> myEntry : this) {
             var castedEntry = (Entry<K, V>) myEntry;
             int index = getIndex(castedEntry.key, newBuckets.length);
             if (newBuckets[index] == null) {
                 castedEntry.next = null;
             } else {
-                @SuppressWarnings("unchecked")
-                var retrievedMyEntry = (Entry<K, V>) newBuckets[index];
-                castedEntry.next = retrievedMyEntry;
+
+                castedEntry.next = newBuckets[index];
             }
             newBuckets[index] = castedEntry;
         }
@@ -184,8 +182,8 @@ public class HashMap<K, V> implements Map<K, V> {
         if (buckets[index] == null) {
             return null;
         }
-        @SuppressWarnings("unchecked")
-        var entry = (Entry<K, V>) buckets[index];
+
+        var entry = buckets[index];
 
         if (checkKeyCoincide(entry, key)) {          // checking the first Entry
             return entry;
@@ -210,8 +208,8 @@ public class HashMap<K, V> implements Map<K, V> {
             return null;
         }
 
-        @SuppressWarnings("unchecked")
-        var entry = (Entry<K, V>) buckets[index];
+
+        var entry = buckets[index];
 
         if (checkKeyCoincide(entry, key)) {         // checking the first Entry
             buckets[index] = entry.next;
@@ -231,14 +229,14 @@ public class HashMap<K, V> implements Map<K, V> {
         return null;
     }
 
-    public static class Entry<K, V> implements Map.Entry<K, V> {
+    private static class Entry<K, V> implements Map.Entry<K, V> {
         private final int hash;
         private final K key;
         private V value;
 
         private Entry<K, V> next;
 
-        public Entry(K key, V value) {
+        private Entry(K key, V value) {
             this.key = key;
             this.hash = Objects.hashCode(key);
             this.value = value;
