@@ -5,9 +5,8 @@ import java.io.InputStream;
 
 public class BufferedInputStream extends InputStream {
 
-    private final InputStream inputStream;
-
     private static final int INITIAL_CAPACITY = 8 * 1024;
+    private final InputStream inputStream;
 
     private int position;
 
@@ -25,26 +24,26 @@ public class BufferedInputStream extends InputStream {
 
     @Override
     public int read(byte[] b) throws IOException {
-        isClosed();
+        ensureIsOpen();
         return read(b, 0, b.length);
     }
 
     @Override
     public int read(byte[] b, int off, int len) throws IOException {
-        isClosed();
+        ensureIsOpen();
         if (off > b.length || len > b.length || Math.abs(len + off) > b.length || off < 0 || len < 0) {
-            throw new IndexOutOfBoundsException();
+            throw new IndexOutOfBoundsException("array length = " + b.length + ", off = " + off + ", len = " + len);
         }
+
         if (off == b.length || len == 0) {
             return 0;
         }
-        if ((count - position) <= 0 && inputStream.available() <= 0) {
-            return -1;
-        }
+
         if (len >= buffer.length && inputStream.available() > 0) {
-            return combineReadToDestArrayFromBufferAndInputStream(b, off, len);
+            return readFromBufferAndInputStream(b, off, len);
         }
-        return readBuffer(b, off, len);
+
+        return readFromBuffer(b, off, len);
     }
 
     @Override
@@ -55,7 +54,7 @@ public class BufferedInputStream extends InputStream {
 
     @Override
     public int read() throws IOException {
-        isClosed();
+        ensureIsOpen();
         if (position >= count) {
             fillBuffer();
             if (position >= count) {
@@ -70,7 +69,7 @@ public class BufferedInputStream extends InputStream {
         return inputStream.available();
     }
 
-    private void isClosed() throws IOException {
+    private void ensureIsOpen() throws IOException {
         if (buffer == null) {
             throw new IOException("InputStream is closed, use new one");
         }
@@ -82,16 +81,19 @@ public class BufferedInputStream extends InputStream {
         count += readCount;
     }
 
-    private int readBuffer(byte[] b, int off, int len) throws IOException {
+    private int readFromBuffer(byte[] b, int off, int len) throws IOException {
         int remainderBytesToReadInBuffer = count - position;
         int readBytes = 0;
+
         if (remainderBytesToReadInBuffer > 0 && remainderBytesToReadInBuffer < len) {
-            readBytes = combineReadToDestArrayFromBufferAndInputStream(b, off, len);
-            position += readBytes;
-        } else if (remainderBytesToReadInBuffer <= 0 && inputStream.available() > 0) {
+            readBytes = readFromBufferAndInputStream(b, off, len);
+        } else if (remainderBytesToReadInBuffer == 0) {
             fillBuffer();
-            readBytes += readBuffer(b, off, len);
+            readBytes += readFromBuffer(b, off, len);
         } else {
+            if ((count - position) < 0) {
+                return -1;
+            }
             System.arraycopy(buffer, position, b, off, len);
             position += len;
             readBytes = len;
@@ -99,10 +101,10 @@ public class BufferedInputStream extends InputStream {
         return readBytes;
     }
 
-    private int combineReadToDestArrayFromBufferAndInputStream(byte[] b, int off, int len) throws IOException {
+    private int readFromBufferAndInputStream(byte[] b, int off, int len) throws IOException {
         int writtenBytesToDestArray = count - position;
         System.arraycopy(buffer, position, b, off, writtenBytesToDestArray);
-
+        position += writtenBytesToDestArray;
         int resultInputRead = inputStream.read(b, off + writtenBytesToDestArray, len - writtenBytesToDestArray);
         writtenBytesToDestArray += resultInputRead < 0 ? 0 : resultInputRead;
 

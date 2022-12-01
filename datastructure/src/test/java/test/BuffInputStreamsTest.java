@@ -24,10 +24,10 @@ public class BuffInputStreamsTest {
                 int count;
                 numberOfBytesInFile = myBuff.available();
                 while ((count = buff.read(bytes)) != -1) {
-                    resultBuffer.add(new String(bytes, "windows-1251").substring(0, count));
+                    resultBuffer.add(new String(bytes, 0, count));
                 }
                 while ((count = myBuff.read(myBytes)) != -1) {
-                    resultMyBuffer.add(new String(myBytes, "windows-1251").substring(0, count));
+                    resultMyBuffer.add(new String(myBytes, 0, count));
                     readBytesByMyBuff += count;
                 }
             } catch (Exception e) {
@@ -58,25 +58,25 @@ public class BuffInputStreamsTest {
             StringJoiner resultMyBuffer = new StringJoiner("\n");
             int numberOfBytesInFile;
             int readBytesByMyBuff = 0;
-            try (var buff = new java.io.BufferedInputStream(new FileInputStream("text2.txt"), sizeBufferStreams);
-                 var myBuff = new BufferedInputStream(sizeBufferStreams, new FileInputStream("text2.txt"))) {
+            try (var buff = new java.io.BufferedInputStream(new FileInputStream("text.txt"), sizeBufferStreams);
+                 var myBuff = new BufferedInputStream(sizeBufferStreams, new FileInputStream("text.txt"))) {
                 byte[] bytes = new byte[sizeArrays];
                 byte[] myBytes = new byte[sizeArrays];
                 numberOfBytesInFile = myBuff.available();
                 int count;
                 while ((count = buff.read(bytes, 0, bytes.length)) != -1) {
-                    resultBuffer.add(new String(bytes, "windows-1251").substring(0, count));
+                    resultBuffer.add(new String(bytes, 0, count));
 
                 }
                 while ((count = myBuff.read(myBytes, 0, myBytes.length)) != -1) {
-                    resultMyBuffer.add(new String(myBytes, "windows-1251").substring(0, count));
+                    resultMyBuffer.add(new String(myBytes, 0, count));
                     readBytesByMyBuff += count;
                 }
             } catch (Exception e) {
                 throw new RuntimeException(e);
             }
 
-            assertEquals(resultMyBuffer.toString().trim(), resultBuffer.toString().trim());
+            assertEquals(resultMyBuffer.toString(), resultBuffer.toString());
             assertEquals(readBytesByMyBuff, numberOfBytesInFile);
             sizeBufferStreams += 1;
             sizeArrays -= 1;
@@ -87,7 +87,7 @@ public class BuffInputStreamsTest {
     void testReadWhenOffEqualsArraySizeAndLenEqualsNil() {
         int readBytesOffEqualsArrayLength;
         int readBytesLenEqualsNil;
-        try (var myBuff = new BufferedInputStream(new FileInputStream("text2.txt"))) {
+        try (var myBuff = new BufferedInputStream(new FileInputStream("text.txt"))) {
             byte[] array = new byte[50];
             readBytesOffEqualsArrayLength = myBuff.read(array, 20, 0);
             readBytesLenEqualsNil = myBuff.read(array, array.length, 0);
@@ -102,6 +102,7 @@ public class BuffInputStreamsTest {
     void testThrowExceptionWhenOffAndLenNotInBoundaries() {
         try (var myBuff = new BufferedInputStream(new FileInputStream("text.txt"))) {
             byte[] myBytes = new byte[50];
+
             assertThrows(IndexOutOfBoundsException.class, () -> myBuff.read(myBytes, -1, 50));
             assertThrows(IndexOutOfBoundsException.class, () -> myBuff.read(myBytes, 20, 80));
             assertThrows(IndexOutOfBoundsException.class, () -> myBuff.read(myBytes, 20, -20));
